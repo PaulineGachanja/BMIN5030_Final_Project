@@ -1,7 +1,7 @@
 ---
 title: "Your Title"
 subtitle: "BMIN5030 Final Project"
-author: "FirstName LastName"
+author: "Pauline Gachanja"
 format: html
 editor: visual
 number-sections: true
@@ -9,6 +9,8 @@ embed-resources: true
 ---
 
 ------------------------------------------------------------------------
+
+Test to see if commit will work
 
 Use this template to complete your project throughout the course. Your Final Project presentation will be based on the contents of this document. Replace the title/name above and text below with your own, but keep the headers. Feel free to change the theme and other display settings, although this is not required.
 
