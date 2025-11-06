@@ -1,26 +1,63 @@
 ---
-title: "Untitled"
+title: "Your Title"
+subtitle: "BMIN5030 Final Project"
+author: "Pauline Gachanja"
 format: html
 editor: visual
+number-sections: true
+embed-resources: true
 ---
 
-## Quarto
+## **Reproductive Timing and Cardiometabolic risk: Bidirectional Mendelian Randomization of Age at Menarche and Natural Menopause**
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+## **Overview**
 
-## Running Code
+This project uses Mendelian Randomization to investigate (MR) to investigate the bidirectional relationship between reproductive timing, particularly age at menarche (AAM) and age of natural menopause (ANM). The goal is to determine whether reproductive timing contributes to cardiometabolic disease risk or is itself influenced by underlying poor cardiometabolic health outcomes.
 
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+## **Introduction**
 
-```{r}
-1 + 1
-```
+Cardiometabolic diseases such as cardiovascular disease (CVD) remains the leading cause of death in the USA and worldwide, accounting for 1 in 5 deaths (Martin et al., 2024). Epidemiological evidence demonstrates that men generally have higher incidence for CVDs across all age groups (DeFilippis & Van Spall, 2021).Thus, CVDs have been regarded as a male condition, a misconception that resulted in research and clinical trials being largely male centered (Al Hamid et al., 2024). As a result, women are constantly underrepresented in CVD research leading to significant disparities in both diagnosis and treatment of CVDs. For instance, even when traditional risk factors for CVD are present for women, clinicians often underestimate their risk for CVDs, leading to poor outcomes (Agarwala et al., 2020). The mortality linked to CVDs is higher globally in women which surpasses the combined deaths from all cancers and other women-focused health conditions (CDC, 2024). The risk for cardiometabolic diseases among women increases following menopause, coinciding with decline in endogenous estrogen levels. The postmenopausal loss of estrogen elevates cardiometabolic disease risk due to endothelial dysfunction and dyslipidemia. However, emerging research demonstrate that the age at menarche also plays a role in cardiometabolic disease risk (Lee et al., 2019). Despite these associations, the causal directions of these associations remain unclear.
 
-You can add options to executable code like this
+In this study, I am going to use genome-wide association studies (GWAS) summary statistics from large, publicly available studies to elucidate the causal direction between each reproductive timing (ANM and AMM) with cardiometabolic risk ( coronary artery disease, Stroke, type 2 diabetes and lipids) using Mendelian Randomization (MR). MR integrates genetics and causal inference, using genetic variants as instrumental variables to minimize confounding causation and reverse causation. A bi-directional MR will be implemented to evaluate whether reproductive timing influences cardiometabolic disease risk and conversely, whether cardiometabolic factors influence the variation of reproductive timing. In addition, a multivariable MR analysis will be conducted to adjust for potential confounders, by excluding BMI and WHR adjusted for BMI. The findings from this project will aim to highlight reproductive timing as a screen tool for women at risk of adverse cardiometabolic events and vice versa. Discussions with the postdocs I am working with, have been helpful in shaping the criteria for choosing the GWAS datasets and the analysis workflow for MR analyses.
 
-```{r}
-#| echo: false
-2 * 2
-```
+## **Table 1: Summary of the datasets used in the MR analysis**
 
-The `echo: false` option disables the printing of code (only output is displayed).
++------------------------------------+--------------------------------------------------+------------------------------------------------------------------------------------------------------------------+
+| Category                           | Phenotype                                        | Source                                                                                                           |
++====================================+==================================================+==================================================================================================================+
+| **Exposure**                       | Age at Natural Menopause (ANM)                   | [Ruth et al. Nature, 2021](https://www.reprogen.org/data_download.html)                                          |
+|                                    |                                                  |                                                                                                                  |
+|                                    |                                                  | ReproGen Consortium                                                                                              |
++------------------------------------+--------------------------------------------------+------------------------------------------------------------------------------------------------------------------+
+|                                    | Age at Menarche (AAM)                            | [Perry et al. Nature, 2014](https://www.reprogen.org/data_download.html)                                         |
+|                                    |                                                  |                                                                                                                  |
+|                                    |                                                  | ReproGen Consortium                                                                                              |
++------------------------------------+--------------------------------------------------+------------------------------------------------------------------------------------------------------------------+
+| **Outcome**                        | Coronary Artery Disease (CAD)                    | [Nikpey et al. 2015](https://cardiogramplusc4d.org/data-downloads/)                                              |
+|                                    |                                                  |                                                                                                                  |
+|                                    |                                                  | CARDIoGRAMplusC4D                                                                                                |
++------------------------------------+--------------------------------------------------+------------------------------------------------------------------------------------------------------------------+
+|                                    | Stroke                                           | [Malik et al. 2018](https://www.megastroke.org/)                                                                 |
+|                                    |                                                  |                                                                                                                  |
+|                                    |                                                  | MEGASTROKE                                                                                                       |
++------------------------------------+--------------------------------------------------+------------------------------------------------------------------------------------------------------------------+
+|                                    | Type 2 Diabetes                                  | [Mahajan A, et al. 2018b](https://diagram-consortium.org/downloads/Mahajan.et.al.2018b.European.GWAS.readme.pdf) |
+|                                    |                                                  |                                                                                                                  |
+|                                    |                                                  | DIAGRAM                                                                                                          |
++------------------------------------+--------------------------------------------------+------------------------------------------------------------------------------------------------------------------+
+|                                    | Lipids (HDL, LDL, Tlyglycerides, Total Cholestol | [Willer CJ et al. 2013](https://csg.sph.umich.edu/willer/public/lipids2013/)                                     |
+|                                    |                                                  |                                                                                                                  |
+|                                    |                                                  | GLGC                                                                                                             |
++------------------------------------+--------------------------------------------------+------------------------------------------------------------------------------------------------------------------+
+| **Covariates for Multivariate MR** | BMI                                              | [Pulit et al. 2018](https://zenodo.org/records/1251813)                                                          |
+|                                    |                                                  |                                                                                                                  |
+|                                    |                                                  | GIANT-UKB                                                                                                        |
+|                                    |                                                  |                                                                                                                  |
+|                                    |                                                  | *bmi.giant-ukbb.meta-analysis.females.23May2018.txt*                                                             |
++------------------------------------+--------------------------------------------------+------------------------------------------------------------------------------------------------------------------+
+|                                    | WHR adjusted for BMI                             | [Pulit et al. 2018](https://zenodo.org/records/1251813)                                                          |
+|                                    |                                                  |                                                                                                                  |
+|                                    |                                                  | GIANT-UKB                                                                                                        |
+|                                    |                                                  |                                                                                                                  |
+|                                    |                                                  | *whradjbmi.giant-ukbb.meta-analysis.females.23May2018.txt*                                                       |
++------------------------------------+--------------------------------------------------+------------------------------------------------------------------------------------------------------------------+
