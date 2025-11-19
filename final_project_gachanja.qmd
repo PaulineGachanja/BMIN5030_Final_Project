@@ -61,3 +61,6 @@ In this study, I am going to use genome-wide association studies (GWAS) summary 
 |                                    |                                                  |                                                                                                                  |
 |                                    |                                                  | *whradjbmi.giant-ukbb.meta-analysis.females.23May2018.txt*                                                       |
 +------------------------------------+--------------------------------------------------+------------------------------------------------------------------------------------------------------------------+
+
+
+Materials and Methods
