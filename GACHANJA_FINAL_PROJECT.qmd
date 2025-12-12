@@ -1,0 +1,2496 @@
+---
+title: "DETERMINING THE CAUSAL LINKS BETWEEN REPRODUCTIVE TIMING AND METABOLIC RISK: A BIDIRECTIONAL MENDELIAN RANDOMIZATION STUDY"
+subtitle: "BMIN5030 Final Project"
+author: "Pauline Gachanja"
+format: html
+editor: visual
+number-sections: true
+embed-resources: true
+---
+
+------------------------------------------------------------------------
+
+# **Overview**
+
+This project uses Mendelian Randomization (MR) to investigate the bidirectional relationship between reproductive timing, particularly age at menarche (AAM) and age of natural menopause (ANM) with Type 2 Diabetes and Lipids (HDL, LDL, Triglycerides and Total cholesterol). The goal is to determine whether we can use reproductive timing as a diagnostic tool to predict Type 2 Diabetes risk and lipid levels or vice-versa.
+
+# **Introduction**
+
+The prevalence of metabolic traits differs largely between men and women. Men tend to have higher incidences throughout their life, leading to the underrpresentation of women in genetic research, based on the assumption that women are protected against metabolic disorders. However, in reality, the mortality associated with metabolic and related cardiometabolic diseases is higher in women than in men. The risk of developing these diseases increases after menopause, a transition that has been linked to the loss of endogenous estrogen. Estrogen deficiency contributes to metabolic dysfunction through mechanisms including endothelial dysfunction, insulin resistance, and dyslipidemia. Both age at menarche (AAM) and age at natural menopause (ANM) reflect key hormonal transitions across a woman’s life course and are therefore important biological markers of long-term metabolic health.
+
+In this study, I am going to use genome-wide association studies (GWAS) summary statistics from large, publicly available studies to investigate the causal direction between each reproductive timing (age at natural menopause and age at menarche) and metabolic risk (Type 2 Diabetes and lipids \[HDL, LDL, Triglycerides and Total cholesterol\]) using Mendelian Randomization (MR). MR integrates genetics and causal inference, using genetic variants as instrumental variables to determine causation between an exposure and the outcome variable by minimizing confounding causation and reverse causation. A bi-directional MR will be implemented to evaluate whether reproductive timing influences metabolic disease risk and conversely, whether metabolic factors influence the variation of reproductive timing. In addition, a multivariable MR analysis will be conducted by introducing another variable BM1, and determining whether the exposure influences the outcome independent of BMI and vice-versa. The findings from this project aim to evaluate whether reproductive timing can serve as a potential early-life screening marker for identifying women at increased risk of adverse metabolic outcomes and to clarify the central role of BMI in these relationships.
+
+**Data sources**
+
+To avoid confounding factors and bias, the datasets used for MR should be independent (no-overlapping individuals) of each other and from the same ancestry.
+
+Table 1: Summary of the datasets used in the MR analysis
+
++----------------------+-----------------------------------------------------+------------------------------------------------------------------------------+
+| Category             | Phenotype                                           | Source                                                                       |
++======================+=====================================================+==============================================================================+
+| **Exposure**         | Age at Natural Menopause (ANM)                      | [Day et al. 2016](https://pmc.ncbi.nlm.nih.gov/articles/PMC4661791/)         |
+|                      |                                                     |                                                                              |
+|                      |                                                     | ReproGen Consortium                                                          |
++----------------------+-----------------------------------------------------+------------------------------------------------------------------------------+
+|                      | Age at Menarche (AAM)                               | [Perry et al. Nature 2014](https://pubmed.ncbi.nlm.nih.gov/25231870/)        |
+|                      |                                                     |                                                                              |
+|                      |                                                     | ReproGen Consortium                                                          |
++----------------------+-----------------------------------------------------+------------------------------------------------------------------------------+
+| **Exposure 2**       | Body mass index (BMI)                               | [Locker et al. 2015](https://pubmed.ncbi.nlm.nih.gov/25673413/)              |
+|                      |                                                     |                                                                              |
+|                      |                                                     | GIANT Consortium                                                             |
++----------------------+-----------------------------------------------------+------------------------------------------------------------------------------+
+| **Outcome**          | Type 2 Diabetes                                     | [Morris et al. 2012](https://www.ebi.ac.uk/gwas/publications/22885922)       |
+|                      |                                                     |                                                                              |
+|                      |                                                     | DIAGRAM Consortium                                                           |
++----------------------+-----------------------------------------------------+------------------------------------------------------------------------------+
+|                      | Lipids (HDL, LDL, Triglycerides, Total Cholesterol) | [Willer CJ et al. 2013](https://csg.sph.umich.edu/willer/public/lipids2013/) |
+|                      |                                                     |                                                                              |
+|                      |                                                     | GLGC Consortium                                                              |
++----------------------+-----------------------------------------------------+------------------------------------------------------------------------------+
+| **Clumping dataset** |                                                     | EUR reference panel                                                          |
+|                      |                                                     |                                                                              |
+|                      |                                                     | 1000 genomes project                                                         |
++----------------------+-----------------------------------------------------+------------------------------------------------------------------------------+
+
+# Methods
+
+## Mendelian Randomization Overview
+
+**Basic MR Assumptions**
+
+Relevance: The genetic variants (SNPs) used as instruments must be strongly associated with the exposure. This is assessed by GWAS significance threshold (p \< 5×10⁻⁸) and F-statistics.
+
+This is essential for the instrument to meaningfully predict the exposure
+
+No confounders: The genetic instruments should not be associated with the confounders of the exposure-outcome relationship.
+
+No Horizontal Pleiotropy: The genetic instruments must influence the outcome only through the exposure and not through any other biological pathway.
+
+**Study design used for this project**
+
+-   Forward Mendelian Randomization (AAM or ANM -\> T2D or Lipid Levels)
+
+-   Reverse Mendelian Randomization (T2D or Lipid Levels -\> AAM or ANM )
+
+-   Multivariable Mendelian Randomization for both forward and reverse MR, where we include BMI as a confounding exposure variable.
+
+## Main statistical Methods
+
+**F-statistics:** This is done to determine whether the genetic instruments are strongly associated with the exposure. If the F-statistics is greater than 10, then the genetic instruments are assumed to be strong, and if they less than 10, then they are considered to be weak and this would introduce bias.
+
+Clumping: This removes SNPs in linkage disequilibrium (LD) with the causal variant, to ensure each SNP provides independent information about the exposure.
+
+Harmonization: This is done to ensure that the exposure and the outcomes SNP effects correspond to the same allele. This step ensures that the direction of effect is consistent across datasets and prevents sign errors that could lead to incorrect causal estimates. Palindromic SNPs with ambiguous strand orientation are handled or removed to maintain accuracy.
+
+**MR estimates**
+
+-   Inverse Variance Weighted (IVW): This calculates the weighted sum of the wald ratios (beta of the exposure/ beta of the outcome) across all SNPs. It is the primary method and most accurate as it gives unbiased results especially when the assumptions of MR are held. I have based my interpretation based on this method.
+
+-   MR-Egger: It allows for and is sensitive to directional horizontal pleiotropy by estimating an intercept term. It provides a valid causal estimate even when pleiotropy is present, though at the cost of reduced statistical power.
+
+-   Weighted Median: It produces a consistent causal estimate if at least 50% of the total instrument weight comes from valid SNPs. It is robust to violations of assumptions affecting a portion of the instruments.
+
+-   Weighted Mode: This method identifies the most common (modal) causal estimate among SNPs, assuming that the largest subset of instruments contributing to the same causal effect are valid.
+
+-   Simple Mode: The simple mode estimator identifies the mode of the causal effect distribution without applying weights. It is less precise than the weighted mode but useful as an additional sensitivity method.
+
+**Sensitivity Analyses**
+
+-   Heterogeneity (Cochran's Q): It checks whether the SNPs have a consistent causal effect. If the p-value \<0.05 then heterogeneity is present, indicating possible directional horizontal pleiotropy or presence of invalid instruments.
+
+-   Steiger directionality test: Checks whether the assumed direction in MR is correct. Determines whether the SNPs explains more variance in the exposure or the outcome, if it explains more in the exposure then the direction is correct. If the p-value \<0.05 then the direction of MR is correct.
+
+-   MR-Egger intercept pleiotropy test: Checks for directional horizontal pleiotropy. if significant then there is pleiotropy which disrupts the MR assumptions and could lead to causal effect bias. If the p-value \<0.05 then there is pleiotropy
+
+-   Leave-one-out analysis: It takes out one SNP at a time and re-calculates the causal effect. This helps to determine potential outliers.
+
+-   Single SNP analysis: It calculates the causal estimate per SNP without combining them, to help identify outliers.
+
+Installing the required packages
+
+```{r}
+##printing the current path
+getwd() 
+
+##install packages
+
+#install.packages("devtools")
+#devtools::install_github("MRCIEU/TwoSampleMR")
+#devtools::install_github("MRCIEU/MRInstruments")
+#devtools::install_github("rondolab/MR-PRESSO")
+#install.packages("ieugwasr")
+#install.packages("remotes")
+#install.packages("png")
+#install.packages("vcfR")
+#BiocManager::install("biomaRt")
+
+```
+
+Loading the required packages
+
+```{r}
+library(tidyverse)
+library(stringr)
+library(ggplot2)
+library(MRInstruments)
+library(TwoSampleMR)
+library(ieugwasr)
+library(readr)
+library(dplyr)
+library(remotes)
+library(devtools)
+library(png)
+library(MRPRESSO)
+library(vcfR)
+library(data.table)
+```
+
+An OpenGWAS token API was loaded to allow access to GWAS summary statistics from OpenGWAS database.
+
+```{r}
+#Sys.getenv("OPENGWAS_JWT") #prevent it from appearing in the html file
+options(ieugwasr.cache = TRUE)
+```
+
+# Age at Menarche
+
+## Age at Menarche and Type 2 Diabetes
+
+### **Forward MR**
+
+Direction: AAM → T2D
+Exposure: Age at Menarche
+Outcome: Type 2 Diabetes
+Research Question: Does age at menarche causally influence T2D risk?
+
+```{r}
+
+###################################################
+# Forward MR: AAM -> T2D
+##################################################
+#obtain the AAM exposure dataset from openGWAS
+exposure_aam <- extract_instruments("ieu-a-1095") #AAM
+
+#clumping
+clumped_exp_aam <- clump_data(exposure_aam,clump_r2=0.001,clump_kb=10000, pop="EUR")
+#clumped_exp_aam <- clump_data(exposure_aam,clump_r2=0.01,pop="EUR")
+
+#F statistic
+clumped_exp_aam$F_statistic <- (clumped_exp_aam$beta.exposure^2) /
+                               (clumped_exp_aam$se.exposure^2)
+summary(clumped_exp_aam$F_statistic)
+
+#obtaining the outcome data
+outcome_T2D <- extract_outcome_data(
+  snps = clumped_exp_aam$SNP,
+  outcomes = "ebi-a-GCST005047" #morris t2d
+  #outcomes = "ebi-a-GCST007517" #Mahajan
+)
+
+
+#harmonize the data
+harmonized_data_aam_T2D <- harmonise_data(clumped_exp_aam,outcome_T2D,action=1)
+#head(harmonized_data_aam_T2D)
+
+#calculating the mr estimates
+res_aam_T2D <- mr(harmonized_data_aam_T2D)
+res_aam_T2D 
+#scatter plots of MR estimates
+p1_res_aam_T2D <- mr_scatter_plot(res_aam_T2D, harmonized_data_aam_T2D)
+p1_res_aam_T2D[[1]]
+
+#calculating heterogeneity
+mr_heterogeneity(harmonized_data_aam_T2D)
+
+#calculating pleiotropy
+mr_pleiotropy_test(harmonized_data_aam_T2D)
+
+#single snp analysis
+res_single_aam_T2D <- mr_singlesnp(harmonized_data_aam_T2D)
+head(res_single_aam_T2D)
+
+#single snp results forest plot
+p2_res_single_aam_T2D <- mr_forest_plot(res_single_aam_T2D)
+p2_res_single_aam_T2D[[1]]
+
+#single snp results funnel plot
+p4_res_single_aam_T2D <- mr_funnel_plot(res_single_aam_T2D)
+p4_res_single_aam_T2D[[1]]
+
+#running loo
+res_loo_aam_T2D <- mr_leaveoneout(harmonized_data_aam_T2D)
+head(res_loo_aam_T2D)
+#ploting loo reukts
+res_loo_aam_T2D <- mr_leaveoneout_plot(res_loo_aam_T2D)
+res_loo_aam_T2D[[1]]
+#steiger directionality test
+out_aam_T2D <- directionality_test(harmonized_data_aam_T2D)
+out_aam_T2D
+
+```
+
+### Results for Forward MR (AAM → T2D)
+
+| Method          | β (Effect) | SE     | p-value    |                 |
+|-----------------|------------|--------|------------|-----------------|
+| IVW             | -0.039     | 0.0631 | 0.5371     | Not significant |
+| Weighted median | 0          | 0.0664 | 1          | Not significant |
+| MR-Egger        | 0.4715     | 0.2257 | **0.0407** | Significant     |
+| Simple Mode     | 0.2149     | 0.1659 | 0.1720     | Not significant |
+| Weighted mode   | 0.2236     | 0.1312 | 0.0803     | Not significant |
+
+MR scatter plot: The SNP points are widely scattered with most of the estimates lines lying close to 0 except for the MR-Egger line, which shows a noticeable positive slope. Since most of the MR estimates show no causal effect, the MR-Egger is likely influenced by pleiotropy.
+
+**Sensitivity analyses**
+
+-   Heterogeneity -\> Strong heterogeneity was observed, indicating inconsistent SNP effects and suggesting possible pleiotropic effects.
+
+-   MR-Egger pleiotropy test -\> the egger intercept was significant too, indicating directional pleiotropy is present, violating MR assumption of no pleiotropy.
+
+-   Steiger directionality test -\> p = 9.77 × 10⁻⁶, confirming the correct causal direction is AAM to T2D, and that reverse causation is unlikely.
+
+-   Single SNP analysis( and the forest plot) -\> Almost all the SNPs were non-significant, showing no strong outliers dominating the results.
+
+    -   Funnel plot: The SNPs show asymmetrical distribution. The MR Egger and IVW do not overlap indicating directional horizontal pleiotropy.
+
+-   Leave-one-out analysis -\> All p-values remained insignificant, suggesting no SNP is driving the observed effect.
+
+    -   LOO plot -\> Each dot represents the IVW estimate after removing one SNP at a time. All the estimates are close to 0 with the confidence intervals crossing 0, indicating no SNP shifts/drives the effect.
+
+**Conclusion:** age at menarche does not causally influence T2D risk.
+
+## **Forward Multivariable MR (MVMR)**
+
+Direction: AAM + BMI → T2D\
+Exposures: Age at Menarche, Body Mass Index\
+Outcome: Type 2 Diabetes\
+Research Question: Does age at menarche affect T2D independent of BMI? and how does BMI affect T2D independent of AAM.
+
+```{r}
+###################################################
+# Multivariable MR: AAM + BMI -> T2D
+##################################################
+# Instruments for AAM + BMI
+exp_mv <- mv_extract_exposures(
+  id_exposure = c("ieu-a-1095", "ieu-a-2"),
+  clump_r2 = 0.001,
+  clump_kb = 10000,
+  pop = "EUR"
+)
+
+# Outcome: T2D
+out_T2D <- extract_outcome_data(
+  snps     = exp_mv$SNP,
+  outcomes = "ebi-a-GCST005047"
+)
+
+# Harmonise
+mvdat <- mv_harmonise_data(exp_mv, out_T2D)
+
+# Multivariable MR
+res_mvmr <- mv_multiple(mvdat)
+res_mvmr
+
+# Main MVMR plot
+ggplot(res_mvmr$result, aes(x = exposure, y = b)) +
+  geom_point(size = 3) +
+  geom_errorbar(
+    aes(ymin = b - 1.96 * se, ymax = b + 1.96 * se),
+    width = 0.1
+  ) +
+  theme_bw() +
+  labs(
+    title = "Multivariable MR: Direct effects on Type 2 Diabetes",
+    x = "Exposure",
+    y = "Effect on T2D"
+  )
+
+
+
+
+```
+
+### **Results for Forward Multivariable MR (**AAM + BMI→ T2D)
+
+| Exposure | β      | SE     | p-value    |
+|----------|--------|--------|------------|
+| AAM      | 0.1014 | 0.1084 | 0.3494     |
+| BMI      | 0.5860 | 0.1858 | **0.0016** |
+
+Looking at the MVMR results, age at menarche had insignificant p-values (0.34941378) while BMI had significant p-values (0.00161457). After adjusting for BMI, age at menarche has no direct causal effects on T2D, confirming our forward MR conclusion. However, BMI has strong direct causal effect on type 2 diabetes.
+
+## **Reverse MR**
+
+Direction: T2D → AAM\
+Exposure: Type 2 Diabetes\
+Outcome: Age at Menarche\
+Research Question: Does T2D causally influence age at menarche?
+
+```{r}
+###################################################
+#Reverse MR: T2D -> AAM
+##################################################
+
+#Instruments for T2D (exposure)
+exp_T2D <- extract_instruments("ebi-a-GCST005047") #t2d
+
+#ld clumping
+exp_T2D_clumped <- clump_data(exp_T2D, clump_r2 = 0.001, clump_kb =10000, pop = "EUR")
+
+exp_T2D_clumped$F_statistic <- (exp_T2D_clumped$beta.exposure^2) /
+                               (exp_T2D_clumped$se.exposure^2)
+summary(exp_T2D_clumped$F_statistic)
+
+#Outcome = aam
+out_aam <- extract_outcome_data(
+  snps     = exp_T2D_clumped$SNP,
+  outcomes = "ieu-a-1095"
+)
+
+#Harmonise
+harmonise_data_T2D_aam <- harmonise_data(exp_T2D_clumped, out_aam, action = 1)
+
+#Reverse MR
+res_T2D_aam <- mr(harmonise_data_T2D_aam)
+res_T2D_aam
+
+# Scatter plot for MR estimatess
+p1_res_T2D_aam <- mr_scatter_plot(res_T2D_aam, harmonise_data_T2D_aam)
+p1_res_T2D_aam[[1]]
+
+#calculating heterogeneity
+mr_heterogeneity(harmonise_data_T2D_aam)
+
+#calculating pleiotropy
+mr_pleiotropy_test(harmonise_data_T2D_aam)
+
+#Single-SNP MR
+res_single_T2D_aam <- mr_singlesnp(harmonise_data_T2D_aam)
+head(res_single_T2D_aam)
+
+#Forest plot for Single-SNP MR
+p2_res_single_T2D_aam <- mr_forest_plot(res_single_T2D_aam)
+p2_res_single_T2D_aam[[1]]
+
+#Funnel plot for Single-SNP MR
+p4_res_single_T2D_aam <- mr_funnel_plot(res_single_T2D_aam)
+p4_res_single_T2D_aam[[1]]
+
+#Leave-one-out
+res_loo_T2D_aam <- mr_leaveoneout(harmonise_data_T2D_aam)
+head(res_loo_T2D_aam)
+
+#Leave-one-out plot
+p_loo_T2D_aam <- mr_leaveoneout_plot(res_loo_T2D_aam)
+p_loo_T2D_aam[[1]]
+
+#Steiger directionality test
+out_T2D_aam <- directionality_test(harmonise_data_T2D_aam)
+out_T2D_aam
+
+```
+
+### Results for Reverse MR (T2D →  AAM)
+
+| Method          | β       | SE     | p-value |                 |
+|-----------------|---------|--------|---------|-----------------|
+| IVW             | −0.0117 | 0.0187 | 0.5324  | Not significant |
+| Weighted median | 0.0095  | 0.0170 | 0.5762  | Not significant |
+| MR-Egger        | 0.0840  | 0.0467 | 0.8172  | Not significant |
+| Simple mode     | -0.0213 | 0.0373 | 0.5268  | Not significant |
+| Weighted mode   | 0.0250  | 0.0202 | 0.2234  | Not significant |
+
+MR scatter plot: The SNP points are mostly distributed close to 0 and the MR estimates points show a similar pattern except for the MR-Egger line, which shows a noticeable positive slope. Since most of the MR estimates show no causal effect, the MR-Egger is likely influenced by pleiotropy.
+
+**Sensitivity analyses**
+
+-   Heterogeneity -\> Strong heterogeneity was observed( MR Egger and IVW Qp-values 8.245362e-08 and 1.029073e-09 respectively), indicating inconsistent SNP effects and suggesting possible pleiotropic effects.
+
+-   MR-Egger pleiotropy test -\> The egger intercept was significant, indicating directional pleiotropy is present, violating MR assumption of no pleiotropy, meaning some T2D affects AAM through pathways other than T2D.
+
+-   Steiger directionality test -\> p = 0 which is significant, causal direction is correct T2D to AAM.
+
+-   Single SNP analysis (and the forest plots)-\> A few SNPs are significant but the majority are non significant (p-values \>0.05 and CI crossing 0). The effect sizes go in both positive and negative directions and with no consistent patterns. Even though MR-Egger is slightly positive and IVW estimate, they both overlap 0, thus not significant, indicating no causal effect of type 2 diabetes on age at menarche.
+
+    -   Funnel plot: The SNPs show asymmetrical distribution, with most SNPs below 0 indicating directional horizontal pleiotropy.
+
+-   Leave-one-out analysis -\> All p-values remained insignificant, suggesting no SNP is driving the observed effect.
+
+    -   LOO plot -\> Each dot represents the IVW estimate after removing one SNP at a time. All the estimates are less than 0 and near -0.01 with the confidence intervals crossing 0, indicating no SNP shifts/drives the effect.
+
+Conclusion: This MR analysis provides no evidence that the T2D has a direct causal effect on age at menarche.
+
+## **Reverse Multivariable MR (MVMR)**
+
+Direction: T2D + BMI → AAM\
+Exposures: Type 2 Diabetes, Body Mass Index\
+Outcome: Age at Menarche\
+Research Question: Does T2D influence age at menarche independent of BMI? and does BMI causally influence T2D independent of AAM.
+
+```{r}
+
+###################################################
+# Reverse MVMR: T2D + BMI -> AAM
+##################################################
+#exposure t2d and bmi
+exp_mv_rev <- mv_extract_exposures(
+  id_exposure = c(
+    "ebi-a-GCST005047",   # t2d
+    "ieu-a-2"            # BMI
+  ),
+  clump_r2 = 0.001,
+  clump_kb = 10000,
+  pop = "EUR"
+)
+
+#Outcome = aam
+out_aam_rev <- extract_outcome_data(
+  snps     = exp_mv_rev$SNP,
+  outcomes = "ieu-a-1095"
+)
+
+#Harmonise 
+mvdat_rev_T2D_aam <- mv_harmonise_data(exp_mv_rev, out_aam_rev)
+
+#Reverse multivariable MR
+res_mvmr_rev_T2D_aam <- mv_multiple(mvdat_rev_T2D_aam)
+res_mvmr_rev_T2D_aam$result
+
+#Plot reverse MVMR
+ggplot(res_mvmr_rev_T2D_aam$result, aes(x = exposure, y = b)) +
+  geom_point(size = 3) +
+  geom_errorbar(
+    aes(ymin = b - 1.96 * se, ymax = b + 1.96 * se),
+    width = 0.1
+  ) +
+  theme_bw() +
+  labs(
+    title = "Reverse MVMR: Effects on Age at menarche",  
+    x = "Exposure",
+    y = "Effect on AAM"
+  )
+
+```
+
+### **Results for Reverse Multivariable MR (T2D + BMI** → AAM)
+
+| Exposure | β      | SE    | p-value      |
+|----------|--------|-------|--------------|
+| T2D      | -0.028 | 0.018 | 1.237274e-01 |
+| BMI      | -0.530 | 0.051 | 5.681115e-25 |
+
+The p-values for T2D was insignificant, indicating that T2D has no direct causal effect on age at menarche even after adjusting for BMI. However, BMI was significant with a negative beta, suggesting that higher BMI leads to earlier age at menarche independent of T2D.
+
+This suggests that BMI rather than T2D is a primary causal determinant for early puberty.
+
+## Age at Menarche and Lipid levels
+
+Lipids used LDL, HDL, Triglycerides (TG) and Total Cholesterol (TC)
+
+## **Forward MR**
+
+Direction: AAM → LDL, AAM → HDL, AAM → TG, AAM →TC\
+Exposure: Age at Menarche\
+Outcome: LDL, HDL, TG, TC\
+Research Question: Does age at menarche causally influence each lipid levels?
+
+```{r}
+###################################################
+# Forward MR: AAM -> Lipids
+##################################################
+
+
+###we alredy have clumped_exp_AAM from the previous MR
+
+#TG -> ebi-a-GCST002216
+#TC -> ebi-a-GCST002221
+#LDL -> ebi-a-GCST002222
+#HDL -> ebi-a-GCST002223
+lipids <- c(
+  "ebi-a-GCST002222",  # LDL
+  "ebi-a-GCST002223",  # HDL
+  "ebi-a-GCST002216",  # Triglycerides
+  "ebi-a-GCST002221"   # Total Cholesterol
+)
+
+###Loop AAM -> Lipids MR
+mr_results_aam_to_lipids <- list()
+harmonised_results <- list()
+
+for(lipid in lipids){
+
+  outcome_lipids <- extract_outcome_data(
+    snps = clumped_exp_aam$SNP,
+    outcomes = lipid
+  )
+
+  harmonise_data_aam_to_lipids <- harmonise_data(
+    exposure_dat = clumped_exp_aam,
+    outcome_dat = outcome_lipids
+  )
+
+  harmonised_results[[lipid]] <- harmonise_data_aam_to_lipids
+   
+  if(nrow(harmonise_data_aam_to_lipids) > 3){
+    res_aam_to_lipids <- mr(harmonise_data_aam_to_lipids)
+  } else {
+    res_aam_to_lipids <- NA
+  }
+
+  mr_results_aam_to_lipids[[lipid]] <- res_aam_to_lipids
+}
+
+mr_results_aam_to_lipids
+
+#############################
+###Plot results for AAM_to_LDL
+data_aam_to_ldl <- harmonised_results[["ebi-a-GCST002222"]]
+res_aam_to_ldl <- mr_results_aam_to_lipids[["ebi-a-GCST002222"]]
+
+#scatter plot
+
+p1_res_aam_to_ldl <- mr_scatter_plot(res_aam_to_ldl, data_aam_to_ldl)
+p1_res_aam_to_ldl[[1]]
+
+# Heterogeneity & pleiotropy
+mr_heterogeneity(data_aam_to_ldl)
+mr_pleiotropy_test(data_aam_to_ldl)
+
+# Single-SNP MR
+res_single_aam_to_ldl <- mr_singlesnp(data_aam_to_ldl)
+head(res_single_aam_to_ldl)
+
+p2_res_single_aam_to_ldl <- mr_forest_plot(res_single_aam_to_ldl)
+p2_res_single_aam_to_ldl[[1]]
+
+p4_res_single_aam_to_ldl <- mr_funnel_plot(res_single_aam_to_ldl)
+p4_res_single_aam_to_ldl[[1]]
+
+# Leave-one-out
+res_loo_aam_to_ldl <- mr_leaveoneout(data_aam_to_ldl)
+head(res_loo_aam_to_ldl)
+
+p_loo_aam_to_ldl <- mr_leaveoneout_plot(res_loo_aam_to_ldl)
+p_loo_aam_to_ldl[[1]]
+
+# Steiger directionality
+out_aam_to_ldl <- directionality_test(data_aam_to_ldl)
+out_aam_to_ldl
+
+#############################
+###Plot results for AAM_to_HDL
+
+data_aam_to_hdl <- harmonised_results[["ebi-a-GCST002223"]]
+res_aam_to_hdl <- mr_results_aam_to_lipids[["ebi-a-GCST002223"]]
+
+#scatter plot
+
+p1_res_aam_to_hdl <- mr_scatter_plot(res_aam_to_hdl, data_aam_to_hdl)
+p1_res_aam_to_hdl[[1]]
+
+# Heterogeneity & pleiotropy
+mr_heterogeneity(data_aam_to_hdl)
+mr_pleiotropy_test(data_aam_to_hdl)
+
+# Single-SNP MR
+res_single_aam_to_hdl <- mr_singlesnp(data_aam_to_hdl)
+head(res_single_aam_to_hdl)
+
+p2_res_single_aam_to_hdl <- mr_forest_plot(res_single_aam_to_hdl)
+p2_res_single_aam_to_hdl[[1]]
+
+p4_res_single_aam_to_hdl <- mr_funnel_plot(res_single_aam_to_hdl)
+p4_res_single_aam_to_hdl[[1]]
+
+# Leave-one-out
+res_loo_aam_to_hdl <- mr_leaveoneout(data_aam_to_hdl)
+head(res_loo_aam_to_hdl)
+
+p_loo_aam_to_hdl <- mr_leaveoneout_plot(res_loo_aam_to_hdl)
+p_loo_aam_to_hdl[[1]]
+
+# Steiger directionality
+out_aam_to_hdl <- directionality_test(data_aam_to_hdl)
+out_aam_to_hdl
+
+
+#############################
+###Plot results for AAM_to_TG
+
+data_aam_to_tg <- harmonised_results[["ebi-a-GCST002216"]]
+res_aam_to_tg <- mr_results_aam_to_lipids[["ebi-a-GCST002216"]]
+
+#scatter plot
+
+p1_res_aam_to_tg <- mr_scatter_plot(res_aam_to_tg, data_aam_to_tg)
+p1_res_aam_to_tg[[1]]
+
+# Heterogeneity & pleiotropy
+mr_heterogeneity(data_aam_to_tg)
+mr_pleiotropy_test(data_aam_to_tg)
+
+# Single-SNP MR
+res_single_aam_to_tg <- mr_singlesnp(data_aam_to_tg)
+head(res_single_aam_to_tg)
+
+p2_res_single_aam_to_tg <- mr_forest_plot(res_single_aam_to_tg)
+p2_res_single_aam_to_tg[[1]]
+
+p4_res_single_aam_to_tg <- mr_funnel_plot(res_single_aam_to_tg)
+p4_res_single_aam_to_tg[[1]]
+
+# Leave-one-out
+res_loo_aam_to_tg <- mr_leaveoneout(data_aam_to_tg)
+head(res_loo_aam_to_tg)
+
+p_loo_aam_to_tg <- mr_leaveoneout_plot(res_loo_aam_to_tg)
+p_loo_aam_to_tg[[1]]
+
+# Steiger directionality
+out_aam_to_tg <- directionality_test(data_aam_to_tg)
+out_aam_to_tg
+
+#############################
+###Plot results for AAM_to_TC
+
+data_aam_to_tc <- harmonised_results[["ebi-a-GCST002221"]]
+res_aam_to_tc <- mr_results_aam_to_lipids[["ebi-a-GCST002221"]]
+
+#scatter plot
+p1_res_aam_to_tc <- mr_scatter_plot(res_aam_to_tc, data_aam_to_tc)
+p1_res_aam_to_tc[[1]]
+
+# Heterogeneity & pleiotropy
+mr_heterogeneity(data_aam_to_tc)
+mr_pleiotropy_test(data_aam_to_tc)
+
+# Single-SNP MR
+res_single_aam_to_tc <- mr_singlesnp(data_aam_to_tc)
+head(res_single_aam_to_tc)
+
+p2_res_single_aam_to_tc <- mr_forest_plot(res_single_aam_to_tc)
+p2_res_single_aam_to_tc[[1]]
+
+p4_res_single_aam_to_tc <- mr_funnel_plot(res_single_aam_to_tc)
+p4_res_single_aam_to_tc[[1]]
+
+# Leave-one-out
+res_loo_aam_to_tc <- mr_leaveoneout(data_aam_to_tc)
+head(res_loo_aam_to_tc)
+
+p_loo_aam_to_tc <- mr_leaveoneout_plot(res_loo_aam_to_tc)
+p_loo_aam_to_tc[[1]]
+
+# Steiger directionality
+out_aam_to_tc <- directionality_test(data_aam_to_tc)
+out_aam_to_tc
+
+
+
+```
+
+### Results for Forward MR (AAM → Lipids)
+
+### LDL cholesterol (AAM → LDL)
+
+| Method          | β       | SE     | p-value |                 |
+|-----------------|---------|--------|---------|-----------------|
+| IVW             | 0.0061  | 0.0208 | 0.7683  | Not significant |
+| Weighted median | 0.0084  | 0.0260 | 0.7420  | Not significant |
+| MR-Egger        | -0.0272 | 0.0805 | 0.7366  | Not significant |
+| Simple mode     | -0.0092 | 0.0530 | 0.8614  | Not significant |
+| Weighted mode   | -0.0024 | 0.0450 | 0.9542  | Not significant |
+
+As seen on the table above and MR scatter plot, the estimates lie close to 0 and are insignificant, suggesting no causal effect of AAM to LDL levels.
+
+**Sensitivity analyses**
+
+-   Heterogeneity -\> Significant heterogeneity was observed ( MR Egger and IVW Qp-values 0.0047 and 0.0039 respectively), indicating inconsistent SNP effects and suggesting possible pleiotropic effects.
+
+-   MR-Egger pleiotropy test -\> The MR egger intercept was not significant (p-value 0.67), indicating no evidence of directional pleiotropy.
+
+-   Steiger directionality test -\> p = 3.503484e-224, significant, causal direction is correct, AAM to LDL.
+
+-   Single SNP analysis (and the forest plots) -\> A few SNPs are significant but the majority are non significant (p-values \>0.05 and CI crossing 0). The effect sizes go in both positive and negative directions and with most of them close to 0. MR-Egger and IVW summary estimates overlap but also cross 0, thus not significant, indicating no causal effect of age at menarche on LDL.
+
+    -   Funnel plot: The SNPs show symmetrical distribution, indicating no directional horizontal pleiotropy.
+
+-   Leave-one-out analysis -\> All p-values remained insignificant, suggesting no SNP is driving the observed effect.
+
+    -   LOO plot -\> Each dot represents the IVW estimate after removing one SNP at a time. All the estimates are more than 0 except one with the confidence intervals crossing 0, indicating no SNP shifts/drives the effect.
+
+Conclusion: The MR analysis provides no evidence that age at menarche has a causal effect on LDL cholesterol.
+
+#### HDL cholesterol  (AAM → HDL)
+
+| Method          | β      | SE     | p-value |                 |
+|-----------------|--------|--------|---------|-----------------|
+| IVW             | 0.0723 | 0.0197 | 0.0002  | Significant     |
+| Weighted median | 0.0771 | 0.0251 | 0.0017  | Significant     |
+| MR-Egger        | 0.1116 | 0.0760 | 0.1480  | Not significant |
+| Simple mode     | 0.0383 | 0.0588 | 0.5169  | Not significant |
+| Weighted mode   | 0.0519 | 0.0541 | 0.3417  | Not significant |
+
+As seen on the table above and MR scatter plot, the beta estimates suggest that later AAM increases HDL cholesterol but all the estimates are negative except for IVW and Weighted Median. The significance suggest that higher later age of menarche is associated with higher HDL.
+
+**Sensitivity analyses**
+
+-   Heterogeneity -\> Significant heterogeneity was observed (MR Egger and IVW Qp-values 0.001 and 0.0012 respectively), indicating inconsistent SNP effects and suggesting possible pleiotropic effects.
+
+-   MR-Egger pleiotropy test -\> The MR egger intercept was not significant (p-value 0.594), indicating no evidence of directional pleiotropy.
+
+-   Steiger directionality test -\> p = 6.19622e-207, significant, causal direction is correct, AAM to HDL.
+
+-   Single SNP analysis (and the forest plots) -\> A few SNPs are significant but the majority are non significant (p-values \>0.05 and CI crossing 0). The effect sizes go in both positive and negative directions and with most of them close to 0. MR-Egger and IVW summary estimates overlap, with MR-Egger crossing 0.
+
+    -   Funnel plot: The SNPs show symmetrical distribution, indicating no directional horizontal pleiotropy.
+
+-   Leave-one-out analysis -\> All p-values remained insignificant, suggesting no SNP is driving the observed effect.
+
+    -   LOO plot -\> Each dot represents the IVW estimate after removing one SNP at a time. All the estimates are more than 0 except one with the confidence intervals crossing 0, indicating no SNP shifts/drives the effect.
+
+Conclusion: Age at menarche has a positive causal effect on HDL cholesterol.
+
+#### Triglycerides (AAM →TG)
+
+| Method          | β       | SE     | p-value |                 |
+|-----------------|---------|--------|---------|-----------------|
+| IVW             | -0.0378 | 0.0199 | 0.0573  | Not significant |
+| Weighted median | -0.0422 | 0.0231 | 0.0581  | Not significant |
+| MR-Egger        | 0.0076  | 0.0766 | 0.9210  | Not significant |
+| Simple mode     | -0.0340 | 0.0494 | 0.4943  | Not significant |
+| Weighted mode   | -0.0300 | 0.0382 | 0.4346  | Not significant |
+
+The MR estimates from the table above are show that age of menarche has no causal effect on TG levels. The scatter plot shows no clear linear relationship between SNP effects on age at menarche and TG levels.
+
+-   Heterogeneity -\> Significant heterogeneity was observed (MR Egger and IVW Qp-values 0.00027 and 0.00031 respectively), indicating inconsistent SNP effects.
+
+-   MR-Egger pleiotropy test -\> The MR egger intercept was not significant (p-value 0.542 ), indicating no evidence of directional horizontal pleiotropy.
+
+-   Steiger directionality test -\> p = 3.8 × 10⁻²¹², significant, causal direction is correct, AAM to TG.
+
+-   Single SNP analysis (and the forest plots) -\> A few SNPs are significant but the majority are non significant (p-values \>0.05 and CI crossing 0). The effect sizes go in both positive and negative directions and with most of them close to 0. MR-Egger and IVW summary estimates overlap, with MR-Egger crossing 0.
+
+    -   Funnel plot: The SNPs show symmetrical distribution, indicating no directional horizontal pleiotropy.
+
+-   Leave-one-out analysis -\> All p-values remained insignificant, suggesting no SNP is driving the observed effect.
+
+    -   LOO plot -\> Each dot represents the IVW estimate after removing one SNP at a time. All the estimates are more than 0 except one with the confidence intervals crossing 0, indicating no SNP shifts/drives the effect.
+
+Conclusion: The MR analyses show no direct causal relationship of age at menarche on TG levels.
+
+#### Total Cholesterol  (AAM → TC)
+
+| Method          | β             | SE     | p-value |                 |
+|-----------------|---------------|--------|---------|-----------------|
+| IVW             | 1.311659e-02  | 0.0221 | 0.5531  | Not significant |
+| Weighted median | 1.878874e-03  | 0.0259 | 0.9422  | Not significant |
+| MR-Egger        | 2.914114e-02  | 0.0854 | 0.7343  | Not significant |
+| Simple mode     | -1.998854e-02 | 0.0518 | 0.7014  | Not significant |
+| Weighted mode   | 2.152908e-05  | 0.0421 | 0.9996  | Not significant |
+
+The MR estimates from the table above are show that age of menarche has no causal effect on Tc levels. The scatter plot shows no clear linear relationship between SNP effects on age at menarche and TClevels.
+
+-   Heterogeneity -\> Significant heterogeneity was observed (MR Egger and IVW Qp-values 6.2 × 10⁻⁵and 8.7 × 10⁻⁵ respectively), indicating inconsistent SNP effects.
+
+-   MR-Egger pleiotropy test -\> The MR egger intercept was not significant (p-value 0.8467), indicating no evidence of directional horizontal pleiotropy.
+
+-   Steiger directionality test -\> p = 6 × 10⁻²¹⁰, significant, causal direction is correct, AAM to TC.
+
+-   Single SNP analysis (and the forest plots) -\> A few SNPs are significant but the majority are non significant (p-values \>0.05 and CI crossing 0). The effect sizes go in both positive and negative directions and with most of them close to 0. MR-Egger and IVW summary estimates overlap and cross 0.
+
+    -   Funnel plot: The SNPs show symmetrical distribution, indicating no directional horizontal pleiotropy.
+
+-   Leave-one-out analysis -\> All p-values remained insignificant, suggesting no SNP is driving the observed effect.
+
+    -   LOO plot -\> Each dot represents the IVW estimate after removing one SNP at a time. All the estimates are more than 0 except one with the confidence intervals crossing 0, indicating no SNP shifts/drives the effect.
+
+Conclusion: The MR analyses show no direct causal relationship of age at menarche on TC levels.
+
+### **Forward Multivariable MR (MVMR)**
+
+Direction: AAM + BMI → HDL or LDL or TG or TC)\
+Exposures: Age at Menarche, Body Mass Index\
+Outcome: HDL, LDL, TG and TC\
+Research Question: Does age at menarche influence the each lipid level independent of BMI? and does BMI affect the AMM independent of each lipid level.
+
+```{r}
+######################################################
+# Multivariable MR: AAM + BMI -> Lipids 
+######################################################
+
+# 1. Extract multivariable exposures
+exp_mvmr_bmi_aam_to_lipids <- mv_extract_exposures(
+  id_exposure = c(
+    "ieu-a-1095",  # AAM
+    "ieu-a-2"      # BMI
+  ),
+  clump_r2 = 0.001,
+  clump_kb = 10000,
+  pop = "EUR"
+)
+
+# Storage objects
+mvmr_results_bmi_aam_to_lipids <- list()
+mvmr_data_bmi_aam_to_lipids    <- list()
+
+# 2. Loop over lipid outcomes
+for(lipid in lipids){
+
+  # Outcome = lipid
+  out_mvmr_bmi_aam_to_lipid <- extract_outcome_data(
+    snps     = exp_mvmr_bmi_aam_to_lipids$SNP,
+    outcomes = lipid
+  )
+
+  # Harmonise
+  mv_dat_bmi_aam_to_lipid <- mv_harmonise_data(
+    exposure_dat = exp_mvmr_bmi_aam_to_lipids,
+    outcome_dat  = out_mvmr_bmi_aam_to_lipid
+  )
+
+  # Store harmonised data
+  if (is.data.frame(mv_dat_bmi_aam_to_lipid)) {
+  mvmr_data_bmi_aam_to_lipids[[lipid]] <- mv_dat_bmi_aam_to_lipid
+} else {
+  mvmr_data_bmi_aam_to_lipids[[lipid]] <- NA
+}
+
+  # Run MVMR
+ if (!is.null(mv_dat_bmi_aam_to_lipid) &&
+    is.data.frame(mv_dat_bmi_aam_to_lipid) &&
+    !is.na(nrow(mv_dat_bmi_aam_to_lipid)) &&
+    nrow(mv_dat_bmi_aam_to_lipid) > 3) {
+
+  res_mvmr <- mv_multiple(mv_dat_bmi_aam_to_lipid)
+
+} else {
+  res_mvmr <- NA
+}
+
+  # Store results
+  mvmr_results_bmi_aam_to_lipids[[lipid]] <- res_mvmr
+}
+
+
+# Plot MVMR for all lipids
+lipid_names <- c(
+  "ebi-a-GCST002222" = "LDL Cholesterol",
+  "ebi-a-GCST002223" = "HDL Cholesterol",
+  "ebi-a-GCST002216" = "Triglycerides",
+  "ebi-a-GCST002221" = "Total Cholesterol"
+)
+
+for(lipid in lipids){
+
+  res_obj <- mvmr_results_bmi_aam_to_lipids[[lipid]]
+
+  # Skip if result is missing, NA, or malformed
+  if (is.null(res_obj) || is.na(res_obj)[1] || !is.list(res_obj) || !"result" %in% names(res_obj)) {
+    message(paste("Skipping", lipid, "- no valid MVMR result"))
+    next
+  }
+
+  res_mvmr <- res_obj$result
+
+  p <- ggplot(res_mvmr, aes(x = exposure, y = b)) +
+    geom_point(size = 3) +
+    geom_errorbar(
+      aes(ymin = b - 1.96 * se, ymax = b + 1.96 * se),
+      width = 0.1
+    ) +
+    theme_bw() +
+    labs(
+      title = paste("MVMR: Direct effects of AAM and BMI on", lipid_names[lipid]),
+      x = "Exposure",
+      y = "Effect on Lipid"
+    )
+
+  print(p)
+}
+
+nrow(out_mvmr_bmi_aam_to_lipid)
+nrow(mv_dat_bmi_aam_to_lipid)
+```
+
+#### **Results for Multivariable MR (**AAM +BMI → HDL or LDL or TG or TC)
+
+Although the outcome data was extracted for all the lipid traits, MV harmonisation failed because no SNPs had valid association estimates for the three AAM, BMI and lipid outcome. Therefore, MVMR could not be performed due to insufficient lipid overlaps.
+
+## Reverse MR
+
+Direction: Lipids → AAM
+Exposures: Lipid Traits, Body Mass Index
+Outcome: Age at Menarche
+Research Question: Do lipid levels influence age at menarche independent of BMI? and does BMI influence AAM independent of each lipid level.
+
+```{r}
+
+####################################
+# Reverse MR: Lipids → Age at Menarche
+####################################
+
+mr_results_lipids_to_aam <- list()
+harmonised_results_lipids_to_aam <- list()
+
+
+for(lipid in lipids){
+
+  # 1. Extract instruments for each lipid (WITH clumping)
+  exp_lipid <- extract_instruments(
+    outcomes = lipid,
+    clump = TRUE,
+    r2 = 0.001,
+    kb = 10000
+  )
+  
+  exp_lipid$F_statistic <- (exp_lipid$beta.exposure^2) / (exp_lipid$se.exposure^2)
+  summary(exp_lipid$F_statistic)
+
+  # 2. Extract AAM as outcome
+  out_aam <- extract_outcome_data(
+    snps     = exp_lipid$SNP,
+    outcomes = "ieu-a-1095"
+  )
+
+  # 3. Harmonise
+  dat_lipid_to_aam <- harmonise_data(
+    exposure_dat = exp_lipid,
+    outcome_dat  = out_aam
+  )
+
+  harmonised_results_lipids_to_aam[[lipid]] <- dat_lipid_to_aam
+
+  # 4. Run MR
+  if(nrow(dat_lipid_to_aam) > 3){
+    res_lipid_to_aam <- mr(dat_lipid_to_aam)
+  } else {
+    res_lipid_to_aam <- NA
+  }
+
+  mr_results_lipids_to_aam[[lipid]] <- res_lipid_to_aam
+}
+
+mr_results_lipids_to_aam
+
+#############################
+###Visualization: LDL to AAM
+data_ldl_to_aam <- harmonised_results_lipids_to_aam[["ebi-a-GCST002222"]]
+res_ldl_to_aam  <- mr_results_lipids_to_aam[["ebi-a-GCST002222"]]
+
+# Scatter
+p1_ldl_to_aam <- mr_scatter_plot(res_ldl_to_aam, data_ldl_to_aam)
+p1_ldl_to_aam[[1]]
+
+# Heterogeneity & pleiotropy
+mr_heterogeneity(data_ldl_to_aam)
+mr_pleiotropy_test(data_ldl_to_aam)
+
+# Single SNP + Forest + Funnel
+res_single_ldl_to_aam <- mr_singlesnp(data_ldl_to_aam)
+head(res_single_ldl_to_aam)
+
+p2_ldl_to_aam <- mr_forest_plot(res_single_ldl_to_aam)
+p2_ldl_to_aam[[1]]
+
+p4_ldl_to_aam <- mr_funnel_plot(res_single_ldl_to_aam)
+p4_ldl_to_aam[[1]]
+
+# Leave-one-out
+res_loo_ldl_to_aam <- mr_leaveoneout(data_ldl_to_aam)
+head(res_loo_ldl_to_aam)
+
+p_loo_ldl_to_aam <- mr_leaveoneout_plot(res_loo_ldl_to_aam)
+p_loo_ldl_to_aam[[1]]
+
+# Steiger
+out_ldl_to_aam <- directionality_test(data_ldl_to_aam)
+out_ldl_to_aam
+
+
+#############################
+###Visualization: HDL to AAM
+data_hdl_to_aam <- harmonised_results_lipids_to_aam[["ebi-a-GCST002223"]]
+res_hdl_to_aam  <- mr_results_lipids_to_aam[["ebi-a-GCST002223"]]
+
+p1_hdl_to_aam <- mr_scatter_plot(res_hdl_to_aam, data_hdl_to_aam)
+p1_hdl_to_aam[[1]]
+#heterogeneity
+mr_heterogeneity(data_hdl_to_aam)
+
+#pleiotropy
+mr_pleiotropy_test(data_hdl_to_aam)
+
+#Single SNP
+res_single_hdl_to_aam <- mr_singlesnp(data_hdl_to_aam)
+head(res_single_hdl_to_aam)
+
+p2_hdl_to_aam <- mr_forest_plot(res_single_hdl_to_aam)
+p2_hdl_to_aam[[1]]
+
+p4_hdl_to_aam <- mr_funnel_plot(res_single_hdl_to_aam)
+p4_hdl_to_aam[[1]]
+
+#Leoveone out analysis
+res_loo_hdl_to_aam <- mr_leaveoneout(data_hdl_to_aam)
+head(res_loo_hdl_to_aam)
+
+p_loo_hdl_to_aam <- mr_leaveoneout_plot(res_loo_hdl_to_aam)
+p_loo_hdl_to_aam[[1]]
+
+#steiger 
+out_hdl_to_aam <- directionality_test(data_hdl_to_aam)
+out_hdl_to_aam
+
+
+#############################
+###Visualization: TG to AAM
+data_tg_to_aam <- harmonised_results_lipids_to_aam[["ebi-a-GCST002216"]]
+#mr analysis
+res_tg_to_aam  <- mr_results_lipids_to_aam[["ebi-a-GCST002216"]]
+
+p1_tg_to_aam <- mr_scatter_plot(res_tg_to_aam, data_tg_to_aam)
+p1_tg_to_aam[[1]]
+#heterogeneity
+mr_heterogeneity(data_tg_to_aam)
+
+#pleiotropy
+mr_pleiotropy_test(data_tg_to_aam)
+
+#single snp analysis
+res_single_tg_to_aam <- mr_singlesnp(data_tg_to_aam)
+head(res_single_tg_to_aam)
+
+p2_tg_to_aam <- mr_forest_plot(res_single_tg_to_aam)
+p2_tg_to_aam[[1]]
+
+p4_tg_to_aam <- mr_funnel_plot(res_single_tg_to_aam)
+p4_tg_to_aam[[1]]
+
+#leaveoneout
+res_loo_tg_to_aam <- mr_leaveoneout(data_tg_to_aam)
+head(res_loo_tg_to_aam)
+
+p_loo_tg_to_aam <- mr_leaveoneout_plot(res_loo_tg_to_aam)
+p_loo_tg_to_aam[[1]]
+
+#steiger
+out_tg_to_aam <- directionality_test(data_tg_to_aam)
+out_tg_to_aam
+
+
+#############################
+###Visualization of reverse: TC to AAM
+data_tc_to_aam <- harmonised_results_lipids_to_aam[["ebi-a-GCST002221"]]
+res_tc_to_aam  <- mr_results_lipids_to_aam[["ebi-a-GCST002221"]]
+
+p1_tc_to_aam <- mr_scatter_plot(res_tc_to_aam, data_tc_to_aam)
+p1_tc_to_aam[[1]]
+#heterogeneity
+mr_heterogeneity(data_tc_to_aam)
+
+#pleiotropy
+mr_pleiotropy_test(data_tc_to_aam)
+
+#single snp analysis
+res_single_tc_to_aam <- mr_singlesnp(data_tc_to_aam)
+head(res_single_tc_to_aam)
+
+p2_tc_to_aam <- mr_forest_plot(res_single_tc_to_aam)
+p2_tc_to_aam[[1]]
+
+p4_tc_to_aam <- mr_funnel_plot(res_single_tc_to_aam)
+p4_tc_to_aam[[1]]
+
+#leoveoeout analysis
+res_loo_tc_to_aam <- mr_leaveoneout(data_tc_to_aam)
+head(res_loo_tc_to_aam)
+
+p_loo_tc_to_aam <- mr_leaveoneout_plot(res_loo_tc_to_aam)
+p_loo_tc_to_aam[[1]]
+
+#steiger
+out_tc_to_aam <- directionality_test(data_tc_to_aam)
+out_tc_to_aam
+
+```
+
+### Results for Reverse MR (Lipids → AAM)
+
+#### LDL cholesterol (LDL → AAM)
+
+| Method          | β (Effect) | SE     | p-value | Interpretation  |
+|-----------------|------------|--------|---------|-----------------|
+| MR-Egger        | 0.0403     | 0.0330 | 0.2275  | Not significant |
+| Weighted median | 0.0020     | 0.0275 | 0.9416  | Not significant |
+| IVW             | -0.0120    | 0.0185 | 0.5146  | Not significant |
+| Simple mode     | -0.0132    | 0.0491 | 0.7881  | Not significant |
+| Weighted mode   | 0.0019     | 0.0254 | 0.9410  | Not significant |
+
+As seen on the table above and MR scatter plot, the estimates lie close to 0 and are insignificant, suggesting no causal effect of LDL levels on AAM .
+
+**Sensitivity analyses**
+
+-   Heterogeneity -\> Insignificant heterogeneity was observed ( MR Egger and IVW Qp-values 0.1459 and 0.2080 respectively), indicating consistent SNP effects and suggesting no possible pleiotropic effects.
+
+-   MR-Egger pleiotropy test -\> The MR egger intercept was not significant (p-value 0.67), indicating no evidence of directional pleiotropy.
+
+-   Steiger directionality test -\> p = 0, significant, causal direction is correct, LDL to AAM.
+
+-   Single SNP analysis (and the forest plot) -\> The SNPs show insignificant (p-values \>0.05 and CI crossing 0). The effect sizes go in both positive and negative directions. MR-Egger and IVW summary estimates overlap but also cross 0, thus not significant, indicating no specific outliers.
+
+    -   Funnel plot: The SNPs show symmetrical distribution, indicating no directional horizontal pleiotropy.
+
+-   Leave-one-out analysis -\> All p-values remained insignificant, suggesting no SNP is driving the observed effect.
+
+    -   LOO plot -\> Each dot represents the IVW estimate after removing one SNP at a time. All the SNPs CI cross 0 and show have insignificant results, indicating no SNP shifts/drives the effect.
+
+Conclusion: LDL levels have no causal effect on AAM.
+
+#### HDL cholesterol (HDL → AAM)
+
+| Method          | β (Effect) | SE     | p-value | Interpretation  |
+|-----------------|------------|--------|---------|-----------------|
+| MR-Egger        | -0.0102    | 0.0279 | 0.7159  | Not significant |
+| Weighted median | -0.0183    | 0.0246 | 0.4559  | Not significant |
+| IVW             | 0.0015     | 0.0170 | 0.9287  | Not significant |
+| Simple mode     | 0.0545     | 0.0472 | 0.2518  | Not significant |
+| Weighted mode   | -0.0090    | 0.0212 | 0.6722  | Not significant |
+
+As seen on the table above and MR scatter plot, the estimates lie close to 0 with some showing negative and positive effect sizes but the P-values are insignificant, suggesting no causal effect of HDL levels on AAM.
+
+**Sensitivity analyses**
+
+-   Heterogeneity -\> Significant heterogeneity was observed ( MR Egger and IVW Qp-values 0.0315and 0.0352 respectively), indicating inconsistent SNP effects and suggesting possible pleiotropic effects.
+
+-   MR-Egger pleiotropy test -\> The MR egger intercept was not significant (p-value 0.5977), indicating no evidence of directional pleiotropy.
+
+-   Steiger directionality test -\> p = 0, significant, causal direction is correct, HDL to AAM.
+
+-   Single SNP analysis (and the forest plots) -\> The SNPs show insignificant (p-values \>0.05 and CI crossing 0). MR-Egger and IVW summary estimates overlap and close to 0, thus not significant, indicating no specific outliers.
+
+    -   Funnel plot: The SNPs show symmetrical distribution, indicating no directional horizontal pleiotropy.
+
+-   Leave-one-out analysis -\> All p-values remained insignificant, suggesting no SNP is driving the observed effect.
+
+-   LOO plot -\> Each dot represents the IVW estimate after removing one SNP at a time. All the SNPs CI cross 0 and show have insignificant results, indicating no SNP shifts/drives the effect.
+
+Conclusion: HDL levels have no causal effect on AAM.
+
+#### Triglycerides (TG → AAM)
+
+| Method          | β (Effect) | SE     | p-value    | Interpretation  |
+|-----------------|------------|--------|------------|-----------------|
+| MR-Egger        | 0.0845     | 0.0393 | **0.0360** | **Significant** |
+| Weighted median | 0.0414     | 0.0318 | 0.1930     | Not significant |
+| IVW             | 0.0169     | 0.0247 | 0.4942     | Not significant |
+| Simple mode     | -0.0259    | 0.0537 | 0.6322     | Not significant |
+| Weighted mode   | 0.0297     | 0.0301 | 0.3291     | Not significant |
+
+As seen on the table above and MR scatter plot, the estimates lie close to 0 with some most showing positive effect sizes but the p-values are insignificant, suggesting no causal effect of TG levels on AAM.
+
+**Sensitivity analyses**
+
+-   Heterogeneity -\> Significant heterogeneity was observed ( MR Egger and IVW Qp-values 0.0029 and 0.0007 respectively), indicating inconsistent SNP effects and suggesting possible pleiotropic effects.
+
+-   MR-Egger pleiotropy test -\> The MR egger intercept was significant (p-value 0.0347), indicating directional pleiotropy.
+
+-   Steiger directionality test -\> p = 0, significant, causal direction is correct, TG to AAM.
+
+-   Single SNP analysis (and the forest plots) -\> The SNPs show insignificant (p-values \>0.05 and CI crossing 0). MR-Egger and IVW summary estimates overlap and close to 0, thus not significant, indicating no specific outliers.
+
+    -   Funnel plot: The SNPs show symmetrical distribution, indicating no directional horizontal pleiotropy.
+
+-   Leave-one-out analysis -\> All p-values remained insignificant, suggesting no SNP is driving the observed effect.
+
+    -   LOO plot -\> Each dot represents the IVW estimate after removing one SNP at a time. All the SNPs CI cross 0 and show have insignificant results, indicating no SNP shifts/drives the effect.
+
+Conclusion: TG levels have no causal effect on AAM.
+
+#### **Total cholesterol (TC** → AAM)
+
+| Method          | β (Effect) | SE     | p-value | Interpretation  |
+|-----------------|------------|--------|---------|-----------------|
+| MR-Egger        | 0.0548     | 0.0367 | 0.1390  | Not significant |
+| Weighted median | 0.0287     | 0.0260 | 0.2694  | Not significant |
+| IVW             | 0.0089     | 0.0184 | 0.6298  | Not significant |
+| Simple mode     | 0.0148     | 0.0511 | 0.7734  | Not significant |
+| Weighted mode   | 0.0241     | 0.0308 | 0.4353  | Not significant |
+
+As seen on the table above and MR scatter plot, the estimates lie close to 0 with some most showing positive effect sizes but the p-values are insignificant, suggesting no causal effect of TC levels on AAM.
+
+**Sensitivity analyses**
+
+-   Heterogeneity -\> Borderline significant heterogeneity was observed ( MR Egger and IVW Qp-values 0.0512 and 0.0413 respectively), indicating some SNOs inconsistency.
+
+-   MR-Egger pleiotropy test -\> The MR egger intercept was insignificant (p-value 0.1523), indicating no directional pleiotropy.
+
+-   Steiger directionality test -\> p = 0, significant, causal direction is correct, TC to AAM.
+
+-   Single SNP analysis (and the forest plots) -\> The SNPs show insignificant (p-values \>0.05 and CI crossing 0). MR-Egger and IVW summary estimates overlap and close to 0, thus not significant, indicating no specific outliers.
+
+    -   Funnel plot: The SNPs show symmetrical distribution, indicating no directional horizontal pleiotropy.
+
+-   Leave-one-out analysis -\> All p-values remained insignificant, suggesting no SNP is driving the observed effect.
+
+    -   LOO plot -\> Each dot represents the IVW estimate after removing one SNP at a time. All the SNPs CI cross 0 and show have insignificant results, indicating no SNP shifts/drives the effect.
+
+Conclusion: TC levels have no causal effect on AAM.
+
+### **Reverse Multivariable MR (MVMR)**
+
+Direction: Lipids + BMI → AAM\
+Exposures: HDL, LDL, TG and TC , Body Mass Index\
+Outcome: Age at Menarche\
+Research Question: Do lipid levels influence age at menarche independent of BMI? and does BMI affect the each lipid level independent of AAM.
+
+```{r}
+######################################################
+# Reverse Multivariable MR: Lipids + BMI → AAM 
+######################################################
+
+# 1. Exposures = Lipids + BMI
+exp_mvmr_lipids_to_aam_bmi <- mv_extract_exposures(
+  id_exposure = c(
+    lipids,   # lipids
+    "ieu-a-2" # BMI
+  ),
+  clump_r2 = 0.001,
+  clump_kb = 10000,
+  pop = "EUR"
+)
+
+# 2. Outcome = AAM
+out_mvmr_lipids_to_aam_bmi <- extract_outcome_data(
+  snps     = exp_mvmr_lipids_to_aam_bmi$SNP,
+  outcomes = "ieu-a-1095"
+)
+
+# 3. Harmonise  
+mvmr_dat_lipids_to_aam_bmi <- mv_harmonise_data(
+  exposure_dat = exp_mvmr_lipids_to_aam_bmi,
+  outcome_dat  = out_mvmr_lipids_to_aam_bmi
+)
+
+# 4. Run multivariable MR
+res_mvmr_lipids_to_aam_bmi <- mv_multiple(mvmr_dat_lipids_to_aam_bmi)
+res_mvmr_lipids_to_aam_bmi$result
+
+#Plot reverse MVMR
+
+ggplot(res_mvmr_lipids_to_aam_bmi$result, aes(x = exposure, y = b)) +
+  geom_point(size = 3) +
+  geom_errorbar(
+    aes(ymin = b - 1.96 * se, ymax = b + 1.96 * se),
+    width = 0.15
+  ) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1, size = 11)
+  ) +
+  labs(
+    title = "Reverse MVMR: Effects of Lipids and BMI on Age at Menarche",
+    x = "Exposure",
+    y = "Effect on AAM"
+  )
+
+```
+
+#### Results for Reverse MVMR (Lipids + BMI → AAM)
+
++-----------------------+----------+----------+----------+--------------+--------------------+
+| Exposure              | SNPs     | β        | SE       | p-value      |                    |
++=======================+==========+==========+==========+==============+====================+
+| Triglycerides         | 35       | 0.0188   | 0.1076   | 0.8614       | Not significant    |
++-----------------------+----------+----------+----------+--------------+--------------------+
+| Total Cholesterol     | 67       | -0.0539  | 0.2925   | 0.8538       | Not significant    |
++-----------------------+----------+----------+----------+--------------+--------------------+
+| LDL Cholesterol       | 53       | 0.0257   | 0.2549   | 0.9198       | Not significant    |
++-----------------------+----------+----------+----------+--------------+--------------------+
+| HDL Cholesterol       | 69       | 0.0171   | 0.1287   | 0.8946       | Not significant    |
++-----------------------+----------+----------+----------+--------------+--------------------+
+| Body Mass Index (BMI) | 51       | -0.5444  | 0.0477   | 3.86 × 10⁻³⁰ | Highly significant |
++-----------------------+----------+----------+----------+--------------+--------------------+
+
+Only BMI showed significant causal effects on AAM, suggesting higher BMI leads to earlier age at menarche. Higher BMI, early puberty.
+
+# **Age at Natural Menopause**
+
+## Age at natural menopause and Type 2 Diabetes
+
+## Forward MR
+
+Direction: ANM → T2D
+Exposure: ANM
+Outcome: Type 2 Diabetes
+Research Question: Does ANM causally influence T2D risk?
+
+```{r}
+###################################################
+# Forward MR: ANM -> T2D
+##################################################
+
+# Obtain the ANM exposure dataset from OpenGWAS
+exposure_anm <- extract_instruments("ieu-a-1004")  #age at natural menopause
+
+# Clumping
+clumped_exp_anm <- clump_data(
+  exposure_anm,
+  clump_r2 = 0.001,
+  clump_kb = 10000,
+  pop = "EUR"
+)
+
+### F statistic
+clumped_exp_anm$F_statistic <- (clumped_exp_anm$beta.exposure^2) /
+                               (clumped_exp_anm$se.exposure^2)
+summary(clumped_exp_anm$F_statistic)
+
+
+# Outcome = T2D
+outcome_anm_T2D <- extract_outcome_data(
+  snps     = clumped_exp_anm$SNP,
+  outcomes = "ebi-a-GCST005047"   # Morris T2D
+)
+
+# Harmonise
+harmonized_data_anm_T2D <- harmonise_data(
+  clumped_exp_anm,
+  outcome_anm_T2D,
+  action = 1
+)
+
+head(harmonized_data_anm_T2D)
+
+# Run MR
+res_anm_T2D <- mr(harmonized_data_anm_T2D)
+head(res_anm_T2D)
+
+
+# Scatter plot
+p1_res_anm_T2D <- mr_scatter_plot(res_anm_T2D, harmonized_data_anm_T2D)
+p1_res_anm_T2D[[1]]
+
+# Heterogeneity
+mr_heterogeneity(harmonized_data_anm_T2D)
+
+# Pleiotropy
+mr_pleiotropy_test(harmonized_data_anm_T2D)
+
+# Single SNP MR
+res_single_anm_T2D <- mr_singlesnp(harmonized_data_anm_T2D)
+head(res_single_anm_T2D)
+
+# Forest plot
+p2_res_single_anm_T2D <- mr_forest_plot(res_single_anm_T2D)
+p2_res_single_anm_T2D[[1]]
+
+# Funnel plot
+p4_res_single_anm_T2D <- mr_funnel_plot(res_single_anm_T2D)
+p4_res_single_anm_T2D[[1]]
+
+# Leave-one-out
+res_loo_anm_T2D <- mr_leaveoneout(harmonized_data_anm_T2D)
+head(res_loo_anm_T2D)
+
+p_loo_anm_T2D <- mr_leaveoneout_plot(res_loo_anm_T2D)
+p_loo_anm_T2D[[1]]
+
+# Steiger directionality
+out_anm_T2D <- directionality_test(harmonized_data_anm_T2D)
+head(out_anm_T2D)
+
+```
+
+### **Results for Forward MR (**ANM → T2D)
+
+| Method          | β (Effect) | SE     | p-value | Interpretation  |
+|-----------------|------------|--------|---------|-----------------|
+| MR-Egger        | -0.0827    | 0.0478 | 0.0916  | Not significant |
+| Weighted Median | -0.0471    | 0.0206 | 0.0219  | Significant     |
+| IVW             | -0.0183    | 0.0188 | 0.3307  | Not significant |
+| Simple Mode     | -0.0624    | 0.0401 | 0.1256  | Not significant |
+| Weighted Mode   | -0.0624    | 0.0225 | 0.0084  | Significant     |
+
+The MR estimates were non significant except for Weighted Median and Weighted Mode.
+
+**Sensitivity analyses**
+
+-   Heterogeneity -\> Strong heterogeneity was observed, indicating inconsistent SNP effects and suggesting possible pleiotropic effects (MR-Egger p-value 2.779106e-05 and IVW Qpvalue 1.086847e-05).
+
+-   MR-Egger pleiotropy test -\> The Egger intercept was not significant too (p-value 0.1518), indicating no strong evidence of directional pleiotropy.
+
+-   Steiger directionality test -\> p = 9.514891e-33, confirming the correct causal direction is ANM to T2D, and that reverse causation is unlikely.
+
+-   Single SNP analysis( and the forest plot) -\> Almost all the SNPs were non-significant, with some having positive and negative effect but showed no strong outliers dominating the results.
+
+    -   Funnel plot: The SNPs show symmetrical distribution.
+
+-   Leave-one-out analysis -\> Most p-values remained insignificant, suggesting no SNP is driving the observed effect.
+
+    -   LOO plot -\> Each dot represents the IVW estimate after removing one SNP at a time. Most of the estimates had a confidence interval crossing 0, indicating no SNP shifts/drives the effect.
+
+**Conclusion:** Suggestive evidence that later age of menopause may be associated with reduced T2D. In the presence of strong heterogeneity as observed, this should be interpreted cautiously.
+
+## Multivariable MR
+
+## **Forward Multivariable MR (MVMR)**
+
+Direction: ANM + BMI → T2D\
+Exposures: ANM, Body Mass Index\
+Outcome: Type 2 Diabetes\
+Research Question: Does ANM affect T2D independent of BMI? and how does BMI affect T2D independent of ANM?
+
+```{r}
+###################################################
+# Multivariable MR: anm + BMI -> T2D
+##################################################
+# Instruments for anm + BMI
+exp_anm_mv <- mv_extract_exposures(
+  id_exposure = c("ieu-a-1004", "ieu-a-2"), #anm and bmi
+  clump_r2 = 0.001,
+  clump_kb = 10000,
+  pop = "EUR"
+)
+
+# Outcome: T2D
+out_anm_T2D <- extract_outcome_data(
+  snps     = exp_anm_mv$SNP,
+  outcomes = "ebi-a-GCST005047" #t2d
+)
+
+# Harmonise
+mv_anm_dat <- mv_harmonise_data(exp_anm_mv, out_anm_T2D)
+
+# Multivariable MR
+res_mvmr_anm <- mv_multiple(mv_anm_dat)
+head(res_mvmr_anm)
+
+# Main MVMR plot
+ggplot(res_mvmr_anm$result, aes(x = exposure, y = b)) +
+  geom_point(size = 3) +
+  geom_errorbar(
+    aes(ymin = b - 1.96 * se, ymax = b + 1.96 * se),
+    width = 0.1
+  ) +
+  theme_bw() +
+  labs(
+    title = "Multivariable MR: Direct effects on Type 2 Diabetes",
+    x = "Exposure",
+    y = "Effect on T2D"
+  )
+
+
+```
+
+#### Results for Forward Multivariable MR (ANM + BMI → T2D)
+
++------------------------+-----------+-----------+-----------+-----------------+
+| Exposure               | β         | SE        | p-value   | Interpretation  |
++========================+===========+===========+===========+=================+
+| Age at menopause (ANM) | -0.0091   | 0.0320    | 0.7761    | Not significant |
++------------------------+-----------+-----------+-----------+-----------------+
+| Body mass index (BMI)  | 0.5991    | 0.1662    | 0.00031   | Significant     |
++------------------------+-----------+-----------+-----------+-----------------+
+
+After adjusting for BMI, age at natural menopause has no direct causal effect on type 2 diabetes. However, Higher BMI has a strong direct causal effect increasing the risk of T2D.
+
+## **Reverse MR**
+
+Direction: T2D → ANM\
+Exposure: Type 2 Diabetes\
+Outcome: ANM\
+Research Question: Does T2D causally influence ANM?
+
+```{r}
+###################################################
+#Reverse MR: T2D -> ANM
+##################################################
+
+# 1. Instruments for T2D (exposure)
+exp_T2D <- extract_instruments("ebi-a-GCST005047") #t2d
+
+exp_T2D_clumped <- clump_data(
+  exp_T2D,
+  clump_r2 = 0.001,
+  clump_kb = 10000,
+  pop = "EUR"
+)
+
+exp_T2D_clumped$F_statistic <- (exp_T2D_clumped$beta.exposure^2) / (exp_T2D_clumped$se.exposure^2)
+summary(exp_T2D_clumped$F_statistic)
+
+# 2. Outcome = ANM
+out_anm <- extract_outcome_data(
+  snps     = exp_T2D_clumped$SNP,
+  outcomes = "ieu-a-1004"   # Age at Natural Menopause
+)
+
+# 3. Harmonise
+harmonise_data_T2D_anm <- harmonise_data(
+  exp_T2D_clumped,
+  out_anm,
+  action = 1
+)
+
+# 4. Reverse MR
+res_T2D_anm <- mr(harmonise_data_T2D_anm)
+head(res_T2D_anm)
+
+# Scatter plot
+p1_res_T2D_anm <- mr_scatter_plot(res_T2D_anm, harmonise_data_T2D_anm)
+p1_res_T2D_anm[[1]]
+
+# Heterogeneity
+mr_heterogeneity(harmonise_data_T2D_anm)
+
+# Pleiotropy
+mr_pleiotropy_test(harmonise_data_T2D_anm)
+
+# Single-SNP MR
+res_single_T2D_anm <- mr_singlesnp(harmonise_data_T2D_anm)
+head(res_single_T2D_anm)
+
+# Forest plot
+p2_res_single_T2D_anm <- mr_forest_plot(res_single_T2D_anm)
+p2_res_single_T2D_anm[[1]]
+
+# Funnel plot
+p4_res_single_T2D_anm <- mr_funnel_plot(res_single_T2D_anm)
+p4_res_single_T2D_anm[[1]]
+
+# Leave-one-out
+res_loo_T2D_anm <- mr_leaveoneout(harmonise_data_T2D_anm)
+head(res_loo_T2D_anm)
+
+p_loo_T2D_anm <- mr_leaveoneout_plot(res_loo_T2D_anm)
+p_loo_T2D_anm[[1]]
+
+# Steiger directionality
+out_T2D_anm <- directionality_test(harmonise_data_T2D_anm)
+head(out_T2D_anm)
+
+```
+
+#### Results for Reverse MR (T2D → ANM)
+
++---------------------+------------+------------+------------+-----------------+
+| Method              | β (Effect) | SE         | p-value    | Interpretation  |
++=====================+============+============+============+=================+
+| **MR-Egger**        | 0.0988     | 0.0916     | 0.2885     | Not significant |
++---------------------+------------+------------+------------+-----------------+
+| **Weighted Median** | 0.0470     | 0.0557     | 0.3988     | Not significant |
++---------------------+------------+------------+------------+-----------------+
+| **IVW**             | 0.0512     | 0.0347     | 0.1403     | Not significant |
++---------------------+------------+------------+------------+-----------------+
+| **Simple Mode**     | 0.0586     | 0.0915     | 0.5262     | Not significant |
++---------------------+------------+------------+------------+-----------------+
+| **Weighted Mode**   | 0.0490     | 0.0621     | 0.4354     | Not significant |
++---------------------+------------+------------+------------+-----------------+
+
+Based on the effects on the table and their distribution on the MR scatter plot, T2D could delay menopause, but since all of the estimates are not significant, therefore no causal effect of T2D on ANM
+
+**Sensitivity analyses**
+
+-   Heterogeneity -\> Heterogeneity was not observed (MR Egger and IVW Qp-values 0.5590 and 0.5925 respectively), indicating consistent SNP effects and suggesting no possible pleiotropic effects.
+
+-   MR-Egger pleiotropy test -\> The egger intercept was not significant (p-value 0.5780), indicating no directional pleiotropy.
+
+-   Steiger directionality test -\> p = 0 which is significant, causal direction is correct T2D to ANM.
+
+-   Single SNP analysis (and the forest plots) -\> Most of the SNPs were not significant (p-values \>0.05 and CI crossing 0). The effect sizes go in both positive and negative directions and with no consistent patterns. The MR-Egger and IVW estimate, were overlapping and crossing 0, thus not significant, indicating no single SNP showed significant drivers.
+
+    -   Funnel plot: The SNPs show symmetrical distribution.
+
+-   Leave-one-out analysis -\> All p-values remained insignificant, suggesting no SNP is driving the observed effect.
+
+    -   LOO plot -\> Each dot represents the IVW estimate after removing one SNP at a time. All the estimates were more than 0 but the confidence intervals were crossing 0, indicating no SNP shifts/drives the effect.
+
+Conclusion: This MR analysis provides no evidence that the T2D has a direct causal effect on age at natural menopause.
+
+## **Reverse Multivariable MR (MVMR)**
+
+Direction: T2D + BMI → ANM\
+Exposures: Type 2 Diabetes, Body Mass Index\
+Outcome: ANM\
+Research Question: Does T2D influence ANM independent of BMI? and does BMI causally influence T2D independent of ANM.
+
+```{r}
+###################################################
+# Reverse MVMR: T2D + BMI -> ANM
+###################################################
+
+# 1. Exposures = T2D + BMI
+exp_mv_rev_anm <- mv_extract_exposures(
+  id_exposure = c(
+    "ebi-a-GCST005047",   # T2D liability
+    "ieu-a-2"            # BMI
+  ),
+  clump_r2 = 0.001,
+  clump_kb = 10000,
+  pop = "EUR"
+)
+
+# 2. Outcome = ANM
+out_anm_rev <- extract_outcome_data(
+  snps     = exp_mv_rev_anm$SNP,
+  outcomes = "ieu-a-1004"   # Age at Natural Menopause
+)
+
+# 3. Harmonise 
+mvdat_rev_T2D_anm <- mv_harmonise_data(
+  exp_mv_rev_anm,
+  out_anm_rev
+)
+
+# 4. Reverse multivariable MR
+res_mvmr_rev_T2D_anm <- mv_multiple(mvdat_rev_T2D_anm)
+res_mvmr_rev_T2D_anm$result
+
+# 5. Plot reverse MVMR
+ggplot(res_mvmr_rev_T2D_anm$result, aes(x = exposure, y = b)) +
+  geom_point(size = 3) +
+  geom_errorbar(
+    aes(ymin = b - 1.96 * se, ymax = b + 1.96 * se),
+    width = 0.1
+  ) +
+  theme_bw() +
+  labs(
+    title = "Reverse MVMR: Effects of T2D and BMI on Age at Natural Menopause",
+    x = "Exposure",
+    y = "Effect on ANM"
+  )
+
+
+```
+
+| Exposure            | β       | SE     | p-value |                 |
+|---------------------|---------|--------|---------|-----------------|
+| **T2D**             | 0.0652  | 0.0462 | 0.1585  | Not significant |
+| **Body Mass Index** | -0.2032 | 0.1317 | 0.1227  | Not significant |
+
+BMI and T2D does not influence age of natural menopause.
+
+## Age at Menopause (ANM) and Lipid levels
+
+## **Forward MR**
+
+Direction: ANM → LDL, ANM → HDL, ANM → TG, ANM →TC\
+Exposure: ANM\
+Outcome: LDL, HDL, TG, TC\
+Research Question: Does ANM causally influence each lipid levels?
+
+```{r}
+###################################################
+# Forward MR: ANM -> Lipids
+###################################################
+
+### We already have clumped_exp_anm from the previous MR (T2D)
+
+lipids <- c(
+  "ebi-a-GCST002222",  # LDL
+  "ebi-a-GCST002223",  # HDL
+  "ebi-a-GCST002216",  # Triglycerides
+  "ebi-a-GCST002221"   # Total Cholesterol
+)
+
+### Loop ANM -> Lipids MR
+mr_results_anm_to_lipids <- list()
+harmonised_results_anm <- list()
+
+for(lipid in lipids){
+
+  outcome_lipids <- extract_outcome_data(
+    snps     = clumped_exp_anm$SNP,
+    outcomes = lipid
+  )
+
+  harmonise_data_anm_to_lipids <- harmonise_data(
+    exposure_dat = clumped_exp_anm,
+    outcome_dat  = outcome_lipids
+  )
+
+  harmonised_results_anm[[lipid]] <- harmonise_data_anm_to_lipids
+
+  if(nrow(harmonise_data_anm_to_lipids) > 3){
+    res_anm_to_lipids <- mr(harmonise_data_anm_to_lipids)
+  } else {
+    res_anm_to_lipids <- NA
+  }
+
+  mr_results_anm_to_lipids[[lipid]] <- res_anm_to_lipids
+}
+
+mr_results_anm_to_lipids
+
+
+#############################
+### Plot results for ANM_to_LDL
+data_anm_to_ldl <- harmonised_results_anm[["ebi-a-GCST002222"]]
+res_anm_to_ldl  <- mr_results_anm_to_lipids[["ebi-a-GCST002222"]]
+
+p1_res_anm_to_ldl <- mr_scatter_plot(res_anm_to_ldl, data_anm_to_ldl)
+p1_res_anm_to_ldl[[1]]
+
+mr_heterogeneity(data_anm_to_ldl)
+mr_pleiotropy_test(data_anm_to_ldl)
+
+res_single_anm_to_ldl <- mr_singlesnp(data_anm_to_ldl)
+head(res_single_anm_to_ldl)
+
+p2_res_single_anm_to_ldl <- mr_forest_plot(res_single_anm_to_ldl)
+p2_res_single_anm_to_ldl[[1]]
+
+p4_res_single_anm_to_ldl <- mr_funnel_plot(res_single_anm_to_ldl)
+p4_res_single_anm_to_ldl[[1]]
+
+res_loo_anm_to_ldl <- mr_leaveoneout(data_anm_to_ldl)
+head(res_loo_anm_to_ldl)
+
+p_loo_anm_to_ldl <- mr_leaveoneout_plot(res_loo_anm_to_ldl)
+p_loo_anm_to_ldl[[1]]
+
+out_anm_to_ldl <- directionality_test(data_anm_to_ldl)
+out_anm_to_ldl
+
+
+#############################
+### Plot results for ANM_to_HDL
+data_anm_to_hdl <- harmonised_results_anm[["ebi-a-GCST002223"]]
+res_anm_to_hdl  <- mr_results_anm_to_lipids[["ebi-a-GCST002223"]]
+
+p1_res_anm_to_hdl <- mr_scatter_plot(res_anm_to_hdl, data_anm_to_hdl)
+p1_res_anm_to_hdl[[1]]
+
+mr_heterogeneity(data_anm_to_hdl)
+mr_pleiotropy_test(data_anm_to_hdl)
+
+res_single_anm_to_hdl <- mr_singlesnp(data_anm_to_hdl)
+head(res_single_anm_to_hdl)
+
+p2_res_single_anm_to_hdl <- mr_forest_plot(res_single_anm_to_hdl)
+p2_res_single_anm_to_hdl[[1]]
+
+p4_res_single_anm_to_hdl <- mr_funnel_plot(res_single_anm_to_hdl)
+p4_res_single_anm_to_hdl[[1]]
+
+res_loo_anm_to_hdl <- mr_leaveoneout(data_anm_to_hdl)
+head(res_loo_anm_to_hdl)
+
+p_loo_anm_to_hdl <- mr_leaveoneout_plot(res_loo_anm_to_hdl)
+p_loo_anm_to_hdl[[1]]
+
+out_anm_to_hdl <- directionality_test(data_anm_to_hdl)
+out_anm_to_hdl
+
+
+#############################
+### Plot results for ANM_to_TG
+data_anm_to_tg <- harmonised_results_anm[["ebi-a-GCST002216"]]
+res_anm_to_tg  <- mr_results_anm_to_lipids[["ebi-a-GCST002216"]]
+
+p1_res_anm_to_tg <- mr_scatter_plot(res_anm_to_tg, data_anm_to_tg)
+p1_res_anm_to_tg[[1]]
+
+mr_heterogeneity(data_anm_to_tg)
+mr_pleiotropy_test(data_anm_to_tg)
+
+res_single_anm_to_tg <- mr_singlesnp(data_anm_to_tg)
+head(res_single_anm_to_tg)
+
+p2_res_single_anm_to_tg <- mr_forest_plot(res_single_anm_to_tg)
+p2_res_single_anm_to_tg[[1]]
+
+p4_res_single_anm_to_tg <- mr_funnel_plot(res_single_anm_to_tg)
+p4_res_single_anm_to_tg[[1]]
+
+res_loo_anm_to_tg <- mr_leaveoneout(data_anm_to_tg)
+head(res_loo_anm_to_tg)
+
+p_loo_anm_to_tg <- mr_leaveoneout_plot(res_loo_anm_to_tg)
+p_loo_anm_to_tg[[1]]
+
+out_anm_to_tg <- directionality_test(data_anm_to_tg)
+out_anm_to_tg
+
+
+#############################
+### Plot results for ANM_to_TC
+data_anm_to_tc <- harmonised_results_anm[["ebi-a-GCST002221"]]
+res_anm_to_tc  <- mr_results_anm_to_lipids[["ebi-a-GCST002221"]]
+
+p1_res_anm_to_tc <- mr_scatter_plot(res_anm_to_tc, data_anm_to_tc)
+p1_res_anm_to_tc[[1]]
+
+mr_heterogeneity(data_anm_to_tc)
+mr_pleiotropy_test(data_anm_to_tc)
+
+res_single_anm_to_tc <- mr_singlesnp(data_anm_to_tc)
+head(res_single_anm_to_tc)
+
+p2_res_single_anm_to_tc <- mr_forest_plot(res_single_anm_to_tc)
+p2_res_single_anm_to_tc[[1]]
+
+p4_res_single_anm_to_tc <- mr_funnel_plot(res_single_anm_to_tc)
+p4_res_single_anm_to_tc[[1]]
+
+res_loo_anm_to_tc <- mr_leaveoneout(data_anm_to_tc)
+head(res_loo_anm_to_tc)
+
+p_loo_anm_to_tc <- mr_leaveoneout_plot(res_loo_anm_to_tc)
+p_loo_anm_to_tc[[1]]
+
+out_anm_to_tc <- directionality_test(data_anm_to_tc)
+out_anm_to_tc
+
+
+
+```
+
+### Results for Forward MR (ANM → LDL, ANM → HDL, ANM → TG, ANM →TC)
+
+#### LDL cholesterol (ANM → LDL)
+
+| Method          | β (effect) | SE     | p-value |                 |
+|-----------------|------------|--------|---------|-----------------|
+| MR-Egger        | 0.0006     | 0.0092 | 0.9489  | Not significant |
+| Weighted median | 0.0047     | 0.0064 | 0.4586  | Not significant |
+| IVW             | -0.0035    | 0.0044 | 0.4241  | Not significant |
+| Simple mode     | 0.0088     | 0.0124 | 0.4826  | Not significant |
+| Weighted mode   | 0.0067     | 0.0076 | 0.3875  | Not significant |
+
+Based on the effects on the table and their distribution on the MR scatter plot, ANM could increase LDL levels, except for IVW estimates, but since all of the estimates are not significant, therefore no causal effect of ANM on LDL.
+
+**Sensitivity analyses**
+
+-   Heterogeneity -\> Insignificant heterogeneity was observed ( MR Egger and IVW Qp-values 0.3250 and 0.3571 respectively), indicating consistent SNP effects.
+
+-   MR-Egger pleiotropy test -\> The MR egger intercept was not significant (p-value 0.6141), indicating no evidence of directional pleiotropy.
+
+-   Steiger directionality test -\> p = 9.850347e-290, significant, causal direction is correct, ANM to LDL.
+
+-   Single SNP analysis (and the forest plots) -\> A few SNPs are significant but the majority are non significant (p-values \>0.05 and CI crossing 0). The effect sizes go in both positive and negative directions and with most of them close to 0. MR-Egger and IVW summary estimates overlap but also cross 0, thus not significant, indicating no causal effect of ANM on LDL.
+
+    -   Funnel plot: The SNPs show symmetrical distribution, indicating no directional horizontal pleiotropy.
+
+-   Leave-one-out analysis -\> All p-values remained insignificant, suggesting no SNP is driving the observed effect.
+
+    -   LOO plot -\> Each dot represents the IVW estimate after removing one SNP at a time. All the estimates are less than 0 with the confidence intervals crossing 0, indicating no SNP shifts/drives the effect.
+
+Conclusion: The MR analysis provides no evidence that genetically predicted ANM has a causal effect on LDL levels.
+
+#### HDL cholesterol (ANM → HDL)
+
+| Method          | β (effect) | SE     | p-value | Interpretation  |
+|-----------------|------------|--------|---------|-----------------|
+| MR-Egger        | -0.0164    | 0.0105 | 0.1290  | Not significant |
+| Weighted median | -0.0114    | 0.0058 | 0.0481  | **Significant** |
+| IVW             | -0.0043    | 0.0051 | 0.4063  | Not significant |
+| Simple mode     | -0.0059    | 0.0127 | 0.6464  | Not significant |
+| Weighted mode   | -0.0109    | 0.0059 | 0.0742  | Not significant |
+
+As seen on the table above and MR scatter plot, the beta estimates suggest later ANM causes a decrease in HDL levels. The p-values are all non-significant except for weighted median.
+
+**Sensitivity analyses**
+
+-   Heterogeneity -\> Significant heterogeneity was observed (MR Egger and IVW Qp-values 0.007305 and 0.00495 respectively), indicating inconsistent SNP effects.
+
+-   MR-Egger pleiotropy test -\> The MR egger intercept was not significant (p-value 0.1975), indicating no evidence of directional pleiotropy.
+
+-   Steiger directionality test -\> p = 63.576071e-279, significant, causal direction is correct, ANM to HDL.
+
+-   Single SNP analysis (and the forest plots) -\> A few SNPs are significant but the majority are non significant (p-values \>0.05 and CI crossing 0). The effect sizes go in both positive and negative directions and with most of them close to 0. MR-Egger and IVW summary estimates overlap, with MR-Egger crossing 0.
+
+    -   Funnel plot: The SNPs show symmetrical distribution, indicating no directional horizontal pleiotropy.
+
+-   Leave-one-out analysis -\> All p-values remained insignificant, suggesting no SNP is driving the observed effect.
+
+    -   LOO plot -\> Each dot represents the IVW estimate after removing one SNP at a time. All the estimates are less than 0 with the confidence intervals crossing 0, indicating no SNP shifts/drives the effect.
+
+Conclusion: Mendelian randomization analyses provided evidence that genetically predicted ANM has no causal effect on HDL cholesterol.
+
+#### Triglycerides (ANM → TG)
+
+| Method          | β (effect) | SE     | p-value | Interpretation  |
+|-----------------|------------|--------|---------|-----------------|
+| MR-Egger        | -0.0072    | 0.0273 | 0.7936  | Not significant |
+| Weighted median | 0.0038     | 0.0054 | 0.4825  | Not significant |
+| IVW             | 0.0153     | 0.0132 | 0.2446  | Not significant |
+| Simple mode     | 0.0083     | 0.0090 | 0.3700  | Not significant |
+| Weighted mode   | 0.0047     | 0.0050 | 0.3966  | Not significant |
+
+The MR estimates from the table above are show that age of menarche has no causal effect on TG levels. The scatter plot shows no clear linear relationship between SNP effects on AAM and TG levels.
+
+-   Heterogeneity -\> Significant heterogeneity was observed (MR Egger and IVW Qp-values 2.626883e-65 and 7.021756e-67 respectively), indicating consistent SNP effects.
+
+-   MR-Egger pleiotropy test -\> The MR egger intercept was not significant (p-value 0.3531), indicating no evidence of directional horizontal pleiotropy.
+
+-   Steiger directionality test -\> 1.412319e-165 significant, causal direction is correct, ANM to TG.
+
+-   Single SNP analysis (and the forest plots) -\> A few SNPs are significant but the majority are non significant (p-values \>0.05 and CI crossing 0). The effect sizes go in both positive and negative directions and with most of them close to 0. MR-Egger and IVW summary estimates overlap, with MR-Egger crossing 0. However, one SNP is seen to be....
+
+    -   Funnel plot: The SNPs show symmetrical distribution, indicating no directional horizontal pleiotropy.
+
+-   Leave-one-out analysis -\> All p-values remained insignificant, suggesting no SNP is driving the observed effect.
+
+    -   LOO plot -\> Each dot represents the IVW estimate after removing one SNP at a time. All the estimates are more than 0 with the confidence intervals crossing 0, indicating no SNP shifts/drives the effect.
+
+Conclusion: The MR analyses show no direct causal relationship on ANM on TG levels.
+
+#### Total cholesterol (ANM → TC)
+
+| Method          | β (effect) | SE     | p-value | Interpretation  |
+|-----------------|------------|--------|---------|-----------------|
+| MR-Egger        | -0.0131    | 0.0119 | 0.2798  | Not significant |
+| Weighted median | -0.0050    | 0.0065 | 0.4424  | Not significant |
+| IVW             | -0.0028    | 0.0058 | 0.6232  | Not significant |
+| Simple mode     | -0.0015    | 0.0130 | 0.9055  | Not significant |
+| Weighted mode   | -0.0072    | 0.0070 | 0.3108  | Not significant |
+
+As seen on the table above and MR scatter plot, the estimates suggests ANM decreases total cholesterol levels but all the estimates are insignificant p\>0.05.
+
+**Sensitivity analyses**
+
+-   Heterogeneity -\> Significant heterogeneity was observed ( MR Egger and IVW Qp-values 0.0005 and 0.0004 respectively), indicating SNP consistency.
+
+-   MR-Egger pleiotropy test -\> The MR egger intercept was insignificant (p-value 0.3322), indicating no directional pleiotropy.
+
+-   Steiger directionality test -\> p = 4.391643e-271, significant, causal direction is correct, ANM to TC.
+
+-   Single SNP analysis (and the forest plots) -\> Most of the SNPs show insignificant (p-values \>0.05 and CI crossing 0), with a few showing significant values. MR-Egger and IVW summary estimates overlap and close to 0.
+
+    -   Funnel plot: The SNPs show symmetrical distribution, indicating no directional horizontal pleiotropy.
+
+-   Leave-one-out analysis -\> All p-values remained insignificant, suggesting no SNP is driving the observed effect.
+
+    -   LOO plot -\> Each dot represents the IVW estimate after removing one SNP at a time. All the SNPs CI cross 0 and show have insignificant results, indicating no SNP shifts/drives the effect.
+
+### **Forward Multivariable MR (MVMR)**
+
+Direction: AAM + BMI → HDL or LDL or TG or TC)\
+Exposures: Age at Menarche, Body Mass Index\
+Outcome: HDL, LDL, TG and TC\
+Research Question: Does age at menarche influence the each lipid level independent of BMI? and does BMI affect the AMM independent of each lipid level.
+
+```{r}
+######################################################
+# Multivariable MR: ANM + BMI -> Lipids 
+######################################################
+
+# 1. Extract multivariable exposures
+exp_mvmr_bmi_anm_to_lipids <- mv_extract_exposures(
+  id_exposure = c(
+    "ieu-a-1004",  # ANM
+    "ieu-a-2"      # BMI
+  ),
+  clump_r2 = 0.001,
+  clump_kb = 10000,
+  pop = "EUR"
+)
+
+# Storage objects
+mvmr_results_bmi_anm_to_lipids <- list()
+mvmr_data_bmi_anm_to_lipids    <- list()
+
+# 2. Loop over lipid outcomes: harmonise + run MVMR if possible
+for (lipid in lipids) {
+
+  # Outcome = lipid
+  out_mvmr_bmi_anm_to_lipid <- extract_outcome_data(
+    snps     = exp_mvmr_bmi_anm_to_lipids$SNP,
+    outcomes = lipid
+  )
+
+  # Harmonise
+  mv_dat_bmi_anm_to_lipid <- mv_harmonise_data(
+    exposure_dat = exp_mvmr_bmi_anm_to_lipids,
+    outcome_dat  = out_mvmr_bmi_anm_to_lipid
+  )
+
+  # Store harmonised data safely
+  if (!is.null(mv_dat_bmi_anm_to_lipid) && is.data.frame(mv_dat_bmi_anm_to_lipid)) {
+    mvmr_data_bmi_anm_to_lipids[[lipid]] <- mv_dat_bmi_anm_to_lipid
+    nsnps <- nrow(mv_dat_bmi_anm_to_lipid)
+  } else {
+    mvmr_data_bmi_anm_to_lipids[[lipid]] <- NA
+    nsnps <- 0
+  }
+
+  cat("Lipid:", lipid, "| SNPs after harmonisation:", nsnps, "\n")
+
+  # Only run MVMR if enough SNPs
+  if (nsnps > 3) {
+    res_mvmr <- mv_multiple(mv_dat_bmi_anm_to_lipid)
+  } else {
+    res_mvmr <- NA
+    cat("Skipping MVMR for", lipid, "- too few SNPs\n")
+  }
+
+  # Store results
+  mvmr_results_bmi_anm_to_lipids[[lipid]] <- res_mvmr
+}
+
+# 3. Plot MVMR results (only for lipids where MVMR actually ran)
+
+lipid_names <- c(
+  "ebi-a-GCST002222" = "LDL Cholesterol",
+  "ebi-a-GCST002223" = "HDL Cholesterol",
+  "ebi-a-GCST002216" = "Triglycerides",
+  "ebi-a-GCST002221" = "Total Cholesterol"
+)
+
+for (lipid in lipids) {
+
+  res_obj <- mvmr_results_bmi_anm_to_lipids[[lipid]]
+
+  # Skip if result is missing, NA, or malformed
+  if (is.null(res_obj) || is.na(res_obj)[1] || !is.list(res_obj) || !"result" %in% names(res_obj)) {
+    message(paste(" Skipping plot for", lipid, "- no valid MVMR result"))
+    next
+  }
+
+  res_mvmr <- res_obj$result
+
+  p <- ggplot(res_mvmr, aes(x = exposure, y = b)) +
+    geom_point(size = 3) +
+    geom_errorbar(
+      aes(ymin = b - 1.96 * se, ymax = b + 1.96 * se),
+      width = 0.1
+    ) +
+    theme_bw() +
+    labs(
+      title = paste("MVMR: Direct effects of ANM and BMI on", lipid_names[lipid]),
+      x = "Exposure",
+      y = "Effect on Lipid"
+    )
+
+  print(p)
+}
+
+
+
+```
+
+#### **Results for Forward MVMR (**AAM + BMI → HDL or LDL or TG or TC)
+
+Multivariable MR of ANM and BMI on lipid traits could not be performed because no SNPs remained after harmonization, indicating insufficient shared genetic instruments across exposures and outcomes\
+
+## Reverse MR
+
+Direction: Lipids → ANM
+Exposures: Lipid Traits, Body Mass Index
+Outcome: ANM
+Research Question: Do lipid levels influence ANM independent of BMI? and does BMI influence ANM independent of each lipid level.
+
+```{r}
+####################################
+# Reverse MR: Lipids → Age at Natural Menopause (ANM)
+####################################
+
+mr_results_lipids_to_anm <- list()
+harmonised_results_lipids_to_anm <- list()
+
+for(lipid in lipids){
+
+  #Extract instruments for each lipid (WITH clumping)
+  exp_lipid <- extract_instruments(
+    outcomes = lipid,
+    clump = TRUE,
+    r2 = 0.001,
+    kb = 10000
+  )
+  
+  exp_lipid$F_statistic <- (exp_lipid$beta.exposure^2) /
+                           (exp_lipid$se.exposure^2)
+  summary(exp_lipid$F_statistic)
+  
+  #Extract ANM as outcome
+  out_anm <- extract_outcome_data(
+    snps     = exp_lipid$SNP,
+    outcomes = "ieu-a-1004"
+  )
+
+  #Harmonise
+  dat_lipid_to_anm <- harmonise_data(
+    exposure_dat = exp_lipid,
+    outcome_dat  = out_anm
+  )
+
+  harmonised_results_lipids_to_anm[[lipid]] <- dat_lipid_to_anm
+
+  #Run MR
+  if(nrow(dat_lipid_to_anm) > 3){
+    res_lipid_to_anm <- mr(dat_lipid_to_anm)
+  } else {
+    res_lipid_to_anm <- NA
+  }
+
+  mr_results_lipids_to_anm[[lipid]] <- res_lipid_to_anm
+}
+
+mr_results_lipids_to_anm
+
+
+#############################
+### Visualization: LDL → ANM
+data_ldl_to_anm <- harmonised_results_lipids_to_anm[["ebi-a-GCST002222"]]
+res_ldl_to_anm  <- mr_results_lipids_to_anm[["ebi-a-GCST002222"]]
+
+p1_ldl_to_anm <- mr_scatter_plot(res_ldl_to_anm, data_ldl_to_anm)
+p1_ldl_to_anm[[1]]
+
+mr_heterogeneity(data_ldl_to_anm)
+mr_pleiotropy_test(data_ldl_to_anm)
+
+res_single_ldl_to_anm <- mr_singlesnp(data_ldl_to_anm)
+head(res_single_ldl_to_anm)
+
+p2_ldl_to_anm <- mr_forest_plot(res_single_ldl_to_anm)
+p2_ldl_to_anm[[1]]
+
+p4_ldl_to_anm <- mr_funnel_plot(res_single_ldl_to_anm)
+p4_ldl_to_anm[[1]]
+
+res_loo_ldl_to_anm <- mr_leaveoneout(data_ldl_to_anm)
+head(res_loo_ldl_to_anm)
+
+p_loo_ldl_to_anm <- mr_leaveoneout_plot(res_loo_ldl_to_anm)
+p_loo_ldl_to_anm[[1]]
+
+out_ldl_to_anm <- directionality_test(data_ldl_to_anm)
+out_ldl_to_anm
+
+
+#############################
+### Visualization: HDL → ANM
+data_hdl_to_anm <- harmonised_results_lipids_to_anm[["ebi-a-GCST002223"]]
+res_hdl_to_anm  <- mr_results_lipids_to_anm[["ebi-a-GCST002223"]]
+
+p1_hdl_to_anm <- mr_scatter_plot(res_hdl_to_anm, data_hdl_to_anm)
+p1_hdl_to_anm[[1]]
+
+mr_heterogeneity(data_hdl_to_anm)
+mr_pleiotropy_test(data_hdl_to_anm)
+
+res_single_hdl_to_anm <- mr_singlesnp(data_hdl_to_anm)
+head(res_single_hdl_to_anm)
+
+p2_hdl_to_anm <- mr_forest_plot(res_single_hdl_to_anm)
+p2_hdl_to_anm[[1]]
+
+p4_hdl_to_anm <- mr_funnel_plot(res_single_hdl_to_anm)
+p4_hdl_to_anm[[1]]
+
+res_loo_hdl_to_anm <- mr_leaveoneout(data_hdl_to_anm)
+head(res_loo_hdl_to_anm)
+
+p_loo_hdl_to_anm <- mr_leaveoneout_plot(res_loo_hdl_to_anm)
+p_loo_hdl_to_anm[[1]]
+
+out_hdl_to_anm <- directionality_test(data_hdl_to_anm)
+out_hdl_to_anm
+
+
+#############################
+### Visualization: TG → ANM
+data_tg_to_anm <- harmonised_results_lipids_to_anm[["ebi-a-GCST002216"]]
+res_tg_to_anm  <- mr_results_lipids_to_anm[["ebi-a-GCST002216"]]
+
+p1_tg_to_anm <- mr_scatter_plot(res_tg_to_anm, data_tg_to_anm)
+p1_tg_to_anm[[1]]
+
+mr_heterogeneity(data_tg_to_anm)
+mr_pleiotropy_test(data_tg_to_anm)
+
+res_single_tg_to_anm <- mr_singlesnp(data_tg_to_anm)
+head(res_single_tg_to_anm)
+
+p2_tg_to_anm <- mr_forest_plot(res_single_tg_to_anm)
+p2_tg_to_anm[[1]]
+
+p4_tg_to_anm <- mr_funnel_plot(res_single_tg_to_anm)
+p4_tg_to_anm[[1]]
+
+res_loo_tg_to_anm <- mr_leaveoneout(data_tg_to_anm)
+head(res_loo_tg_to_anm)
+
+p_loo_tg_to_anm <- mr_leaveoneout_plot(res_loo_tg_to_anm)
+p_loo_tg_to_anm[[1]]
+
+out_tg_to_anm <- directionality_test(data_tg_to_anm)
+out_tg_to_anm
+
+
+
+#############################
+### Plot results for ANM_to_TC
+
+data_tc_to_anm <- harmonised_results_lipids_to_anm[["ebi-a-GCST002221"]]
+res_tc_to_anm  <- mr_results_lipids_to_anm[["ebi-a-GCST002221"]]
+
+p1_tc_to_anm <- mr_scatter_plot(res_tc_to_anm, data_tc_to_anm)
+p1_tc_to_anm[[1]]
+
+mr_heterogeneity(data_tc_to_anm)
+mr_pleiotropy_test(data_tc_to_anm)
+
+res_single_tc_to_anm <- mr_singlesnp(data_tc_to_anm)
+head(res_single_tc_to_anm)
+
+p2_tc_to_anm <- mr_forest_plot(res_single_tc_to_anm)
+p2_tc_to_anm[[1]]
+
+p4_tc_to_anm <- mr_funnel_plot(res_single_tc_to_anm)
+p4_tc_to_anm[[1]]
+
+res_loo_tc_to_anm <- mr_leaveoneout(data_tc_to_anm)
+head(res_loo_tc_to_anm)
+
+p_loo_tc_to_anm <- mr_leaveoneout_plot(res_loo_tc_to_anm)
+p_loo_tc_to_anm[[1]]
+
+out_tc_to_anm <- directionality_test(data_tc_to_anm)
+out_tc_to_anm
+
+```
+
+#### Results for Reverse MR (Lipids → ANM)
+
+#### LDL cholesterol (LDL → ANM)
+
+| Method          | β (Effect) | SE     | p-value | Interpretation  |
+|-----------------|------------|--------|---------|-----------------|
+| MR-Egger        | -0.0865    | 0.1462 | 0.5563  | Not significant |
+| Weighted Median | -0.0693    | 0.0952 | 0.664   | Not significant |
+| IVW             | -0.0945    | 0.0798 | 0.2361  | Not significant |
+| Simple Mode     | -0.1890    | 0.2077 | 0.3662  | Not significant |
+| Weighted Mode   | -0.1021    | 0.0844 | 0.2307  | Not significant |
+
+As seen on the table above and MR scatter plot, the estimates are negative meaning higher LDL levels leads to earlier age at menopause. However all the values are insignificant.
+
+**Sensitivity analyses**
+
+-   Heterogeneity -\> Significant heterogeneity was observed ( MR Egger and IVW Qp-values 3.001923e-06 nd 4.335037e-06 respectively), indicating inconsistent SNP effects.
+
+-   MR-Egger pleiotropy test -\> The MR egger intercept was not significant (p-value 0.9476), indicating no evidence of directional pleiotropy.
+
+-   Steiger directionality test -\> p = 0, significant, causal direction is correct, ANM to LDL.
+
+-   Single SNP analysis (and the forest plot) -\> Most SNPs show insignificant (p-values \>0.05 and CI crossing 0). The effect sizes go in both positive and negative directions. MR-Egger and IVW summary estimates overlap but also cross 0, thus not significant, indicating no specific outliers.
+
+    -   Funnel plot: The SNPs show symmetrical distribution, indicating no directional horizontal pleiotropy.
+
+-   Leave-one-out analysis -\> All p-values remained insignificant, suggesting no SNP is driving the observed effect.
+
+    -   LOO plot -\> Each dot represents the IVW estimate after removing one SNP at a time. All the SNPs CI cross 0 and show have insignificant results, indicating no SNP shifts/drives the effect.
+
+#### HDL cholesterol (HDL → ANM)
+
++-----------------+------------+-----------+-----------+------------------------------+
+| Method          | β (Effect) | SE        | p-value   | Interpretation               |
++=================+============+===========+===========+==============================+
+| MR-Egger        | -0.1490    | 0.1118    | 0.1865    | Not significant              |
++-----------------+------------+-----------+-----------+------------------------------+
+| Weighted Median | -0.1198    | 0.0764    | 0.1169    | Not significant              |
++-----------------+------------+-----------+-----------+------------------------------+
+| IVW             | -0.0610    | 0.0707    | 0.3884    | Not significant              |
++-----------------+------------+-----------+-----------+------------------------------+
+| Simple Mode     | -0.2607    | 0.1632    | 0.1139    | Not significant              |
++-----------------+------------+-----------+-----------+------------------------------+
+| Weighted Mode   | -0.1209    | 0.0607    | 0.0497    | Not significant (borderline) |
++-----------------+------------+-----------+-----------+------------------------------+
+
+As seen on the table above and MR scatter plot, the estimates are negative meaning higher LDL levels leads to earlier age at menopause. However all the values are insignificant.
+
+**Sensitivity analyses**
+
+-   Heterogeneity -\> Significant heterogeneity was observed ( MR Egger and IVW Qp-values 3.952637e-09 and 3.176397e-09 respectively), indicating inconsistent SNP effects and suggesting possible pleiotropic effects.
+
+-   MR-Egger pleiotropy test -\> The MR egger intercept was not significant (p-value 0.3130), indicating no evidence of directional pleiotropy.
+
+-   Steiger directionality test -\> p = 0, significant, causal direction is correct, HDL to AAM.
+
+-   Single SNP analysis (and the forest plots) -\> Most SNPs show insignificant (p-values \>0.05 and CI crossing 0). MR-Egger and IVW summary estimates overlap and close to 0, thus not significant. Although a few individual SNPs appear significant, these do not influence the overall causal estimate, and no single SNP appears to be driving the result.
+
+    -   Funnel plot: The SNPs show symmetrical distribution, indicating no directional horizontal pleiotropy.
+
+-   Leave-one-out analysis -\> All p-values remained insignificant, suggesting no SNP is driving the observed effect.
+
+    -   LOO plot -\> Each dot represents the IVW estimate after removing one SNP at a time. All the SNPs CI cross 0 and show have insignificant results, indicating no SNP shifts/drives the effect.
+
+Conclusion: TC does not causally influence age at menopause.
+
+#### Triglycerides (TG → ANM)
+
++-----------------+-------------+-------------+-------------+-----------------+
+| Method          | β (Effect)  | SE          | p-value     | Interpretation  |
++=================+=============+=============+=============+=================+
+| MR-Egger        | 0.2535      | 0.1560      | 0.1102      | Not significant |
++-----------------+-------------+-------------+-------------+-----------------+
+| Weighted Median | 0.1875      | 0.1093      | 0.0863      | Not significant |
++-----------------+-------------+-------------+-------------+-----------------+
+| **IVW**         | **0.2197**  | **0.0940**  | **0.0195**  | **Significant** |
++-----------------+-------------+-------------+-------------+-----------------+
+| Simple Mode     | 0.2758      | 0.2324      | 0.2406      | Not significant |
++-----------------+-------------+-------------+-------------+-----------------+
+| Weighted Mode   | 0.0946      | 0.1204      | 0.4354      | Not significant |
++-----------------+-------------+-------------+-------------+-----------------+
+
+As seen on the table above and MR scatter plot, the estimates are positive indicating higher TGs delays. The p-values is significant for IVW which is our main method, suggesting causal effect of TG levels on ANM.
+
+**Sensitivity analyses**
+
+-   Heterogeneity -\> Significant heterogeneity was observed ( MR Egger and IVW Qp-values 4.609612e-07 and 6.721188e-07 respectively), indicating inconsistent SNP effects.
+
+-   MR-Egger pleiotropy test -\> The MR egger intercept was insignificant (p-value 0.7859), indicating evidence for no directional pleiotropy.
+
+-   Steiger directionality test -\> p = 0, significant, causal direction is correct, TG to ANM.
+
+-   Single SNP analysis (and the forest plots) -\> Most of the SNPs show insignificant (p-values \>0.05 and CI crossing 0), indicating no specific outliers. The effect sizes go in both positive and negative direction. MR-Egger and IVW summary estimates overlap. IVW does not cross 0 showing significant estimates.
+
+    -   Funnel plot: The SNPs show symmetrical distribution, indicating no directional horizontal pleiotropy.
+
+-   Leave-one-out analysis(and LOO plot) -\> Some of the leave-one-out estimates remained statistically significant and on the same side of the null, with confidence intervals not crossing 0. This indicates that the causal estimate is not driven by any individual genetic variant.
+
+Conclusion: TG causally affect age at natural menopause.
+
+#### Total cholesterol (TC → ANM)
+
++-----------------+-----------+-----------+-----------+----------------------+
+| Method          | β         | SE        | p-value   | Interpretation       |
++=================+===========+===========+===========+======================+
+| MR-Egger        | -0.0951   | 0.1814    | 0.6017    | Not significant      |
++-----------------+-----------+-----------+-----------+----------------------+
+| Weighted Median | -0.1351   | 0.0923    | 0.1434    | Not significant      |
++-----------------+-----------+-----------+-----------+----------------------+
+| IVW             | -0.0821   | 0.0884    | 0.3535    | Not significant      |
++-----------------+-----------+-----------+-----------+----------------------+
+| Simple Mode     | -0.2502   | 0.1785    | 0.1648    | Not significant      |
++-----------------+-----------+-----------+-----------+----------------------+
+| Weighted Mode   | -0.1817   | 0.0977    | 0.0667    | Not significant      |
++-----------------+-----------+-----------+-----------+----------------------+
+
+As seen on the table above and MR scatter plot, the estimates lie close to 0 with some most showing positive effect sizes but the p-values are insignificant, suggesting no causal effect of TG levels to ANM.
+
+**Sensitivity analyses**
+
+-   Heterogeneity -\> Borderline significant heterogeneity was observed ( MR Egger and IVW Qp-values 0.0005 and 0.0004 respectively), indicating some SNOs inconsistency.
+
+-   MR-Egger pleiotropy test -\> The MR egger intercept was insignificant (p-value 0.3322), indicating no directional pleiotropy.
+
+-   Steiger directionality test -\> p =4.391643e-271 significant, causal direction is correct, TC to ANM.
+
+-   Single SNP analysis (and the forest plots) -\> The SNPs show insignificant (p-values \>0.05 and CI crossing 0). MR-Egger and IVW summary estimates overlap and close to 0, thus not significant.
+
+    -   Funnel plot: The SNPs show symmetrical distribution, indicating no directional horizontal pleiotropy.
+
+-   Leave-one-out analysis(and LOO plot) -\> Most of the leave-one-out estimates remained statistically insignificant and on the same side of the null, with confidence intervals crossing 0. This indicates that the causal estimate is not driven by any individual genetic variant.
+
+Conclusion: TC does not influence age at natural menopause.
+
+### **Reverse Multivariable MR (MVMR)**
+
+Direction: Lipids + BMI → ANM\
+Exposures: HDL, LDL, TG and TC , Body Mass Index\
+Outcome: ANM\
+Research Question: Do lipid levels influence ANM independent of BMI? and does BMI affect the each lipid level independent of ANM.
+
+```{r}
+######################################################
+# Reverse Multivariable MR: Lipids + BMI → ANM 
+######################################################
+
+#Exposures = Lipids + BMI
+exp_mvmr_lipids_to_anm_bmi <- mv_extract_exposures(
+  id_exposure = c(
+    lipids,   # lipids
+    "ieu-a-2" # BMI
+  ),
+  clump_r2 = 0.001,
+  clump_kb = 10000,
+  pop = "EUR"
+)
+
+#Outcome = ANM
+out_mvmr_lipids_to_anm_bmi <- extract_outcome_data(
+  snps     = exp_mvmr_lipids_to_anm_bmi$SNP,
+  outcomes = "ieu-a-1004"
+)
+
+#Harmonise  
+mvmr_dat_lipids_to_anm_bmi <- mv_harmonise_data(
+  exposure_dat = exp_mvmr_lipids_to_anm_bmi,
+  outcome_dat  = out_mvmr_lipids_to_anm_bmi
+)
+
+#Run multivariable MR
+res_mvmr_lipids_to_anm_bmi <- mv_multiple(mvmr_dat_lipids_to_anm_bmi)
+res_mvmr_lipids_to_anm_bmi$result
+
+#Plot reverse MVMR
+
+ggplot(res_mvmr_lipids_to_anm_bmi$result, aes(x = exposure, y = b)) +
+  geom_point(size = 3) +
+  geom_errorbar(
+    aes(ymin = b - 1.96 * se, ymax = b + 1.96 * se),
+    width = 0.15
+  ) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1, size = 11)
+  ) +
+  labs(
+    title = "Reverse MVMR: Effects of Lipids and BMI on Age at Natural Menopause (ANM)",
+    x = "Exposure",
+    y = "Effect on ANM"
+  )
+
+```
+
+#### Results for Reverse MVMR (Lipids + BMI → ANM)
+
++------------------------+----------+----------+----------+----------+-----------------+
+| Exposure               | SNPs     | β        | SE       | p-value  | Interpretation  |
++========================+==========+==========+==========+==========+=================+
+| Triglycerides (TG)     | 35       | -0.1684  | 0.3673   | 0.6466   | Not significant |
++------------------------+----------+----------+----------+----------+-----------------+
+| Total Cholesterol (TC) | 67       | 0.9683   | 0.9969   | 0.3314   | Not significant |
++------------------------+----------+----------+----------+----------+-----------------+
+| LDL Cholesterol        | 53       | -0.9216  | 0.8680   | 0.2883   | Not significant |
++------------------------+----------+----------+----------+----------+-----------------+
+| HDL Cholesterol        | 69       | -0.4520  | 0.4399   | 0.3042   | Not significant |
++------------------------+----------+----------+----------+----------+-----------------+
+| Body Mass Index (BMI)  | 51       | -0.1395  | 0.1632   | 0.3927   | Not significant |
++------------------------+----------+----------+----------+----------+-----------------+
+
+Conclusion: No evidence that increase in Lipid levels, even after adjusting for BMI influence the menopause timing
+
+# **Conclusion**
+
+This study investigated the causal links between reproductive timing—age at menarche (AAM) and age at natural menopause (ANM)—and major metabolic traits, including type 2 diabetes (T2D), lipid levels (HDL, LDL, triglycerides, total cholesterol), and BMI. Overall, the findings provide strong evidence that BMI is the key driver linking reproductive timing and metabolic risk, while AAM and ANM themselves show limited or trait-specific causal effects with the exception of AAM influencing HDL. Therefore, we can conclude that AAM and ANM are not reliable standalone predictors of T2D or lipid disorders when considered independently of BMI. BMI should be prioritized as a modifiable risk factor in the prevention of early puberty and metabolic disease. AAM may be useful as an early-life indicator of metabolic vulnerability, but mainly because it reflects underlying adiposity rather than reproductive biology. These findings suggest that reproductive timing reflects underlying metabolic risk largely through adiposity rather than direct hormonal mechanisms.
+
+**Limitations**
+
+Several multivariable Mendelian randomization analyses could not be performed due to insufficient SNP overlap following harmonisation. While forward Mendelian randomization analyses were successful, reverse and multivariable analyses required genetic variants to be simultaneously associated with multiple exposures and present in the outcome GWAS. Reproductive timing traits such as age at menarche and age at natural menopause are highly polygenic, whereas lipid traits and type 2 diabetes share fewer genome-wide significant variants with these traits. As a result, the intersection of valid instruments across all datasets was limited, leading to harmonisation failure. This reflects differences in genetic architecture rather than methodological error and highlights a known limitation of multivariable MR when applied to complex traits.
+
+Strong heterogeneity in many models suggests biological complexity and possible balanced pleiotropy. Meaning that the genetic variants affect the outcome through other pathway than through the exposure, but these pleiotropic effects are random and cancel out in average. The results are specific to European-ancestry populations and it was difficult to find sex-stratified GWAS studies.
+
+**Future directions**
+
+-   Replicate in other ancestries to see whether the causal effects are the same as what we have seen in this study.
+
+-   Explore the causal effects of reproductive timing with other cardiovascular traits and other metabolic traits.
+
+-   Investigate the multivariable hormonal modeling.
+
+-   Understand the biological mechanism of where we see positive causation.
+
+-   Explore other pleiotropy and heterogeneity methods
+
+    -   MR-PRESSO - detects and eliminates outlier SNPs driving pleiotropy.
+
+    -   CAUSE – models correlated pleiotropy.
+
+    -   Radial MR – identify variants influencing pleiotropy.
